@@ -14,6 +14,7 @@
 #include <random>
 #include "VTKWriter.hpp"
 #include "util/SimpleRNG.hpp"
+#include "Amr/grid_dist_amr.hpp"
 
 BOOST_AUTO_TEST_SUITE( vtk_writer_test )
 
@@ -947,7 +948,7 @@ BOOST_AUTO_TEST_CASE( vtk_writer_use_grids)
 
 }
 
-BOOST_AUTO_TEST_CASE( vtk_writer_use_grids_image)
+BOOST_AUTO_TEST_CASE( vtk_writer_use_grids_umesh)
 {
 	Vcluster<> & v_cl = create_vcluster();
 
@@ -957,22 +958,26 @@ BOOST_AUTO_TEST_CASE( vtk_writer_use_grids_image)
 	{
 
 		// Create box grids
-		Point<2,long int> offset1({0,0});
+		Point<2,long int> offset1_i({-1,-1});
+		Point<2,double> offset1({-0.1,-0.1});
 		Point<2,double> spacing1({0.1,0.1});
 		Box<2,size_t> dom1({1,1},{5,5});
 
 		// Create box grids
-		Point<2,long int> offset2({5,0});
-		Point<2,double> spacing2({0.1});
+		Point<2,long int> offset2_i({4,-1});
+		Point<2,double> offset2({0.4,-0.1});
+		Point<2,double> spacing2({0.1,0.1});
 		Box<2,size_t> dom2({1,1},{6,5});
 
 		// Create box grids
-		Point<2,long int> offset3({0,5});
+		Point<2,long int> offset3_i({-1,4});
+		Point<2,double> offset3({-0.1,0.4});
 		Point<2,double> spacing3({0.1,0.1});
 		Box<2,size_t> dom3({1,1},{5,6});
 
 		// Create box grids
-		Point<2,long int> offset4({5,5});
+		Point<2,long int> offset4_i({4,4});
+		Point<2,double> offset4({0.4,0.4});
 		Point<2,double> spacing4({0.1,0.1});
 		Box<2,size_t> dom4({1,1},{6,6});
 
@@ -996,256 +1001,97 @@ BOOST_AUTO_TEST_CASE( vtk_writer_use_grids_image)
 		g4.template get<Point_test<double>::s>(0) = 1.0/3.0;
 
 		// Create a writer and write
-		VTKWriter<boost::mpl::pair<grid_cpu<2,Point_test<double>>,double>,VECTOR_GRIDS_IMAGE> vtk_g;
-		Box<2,double> d({0,0},{11,11});
-		vtk_g.setExtents(d,spacing1);
-		vtk_g.add(g1,offset1,spacing1,dom1);
-		vtk_g.add(g2,offset2,spacing2,dom2);
-		vtk_g.add(g3,offset3,spacing3,dom3);
-		vtk_g.add(g4,offset4,spacing4,dom4);
+		VTKWriter<boost::mpl::pair<grid_cpu<2,Point_test<double>>,double>,VECTOR_GRIDS_UMESH> vtk_g;
+
+		vtk_g.add(g1,offset1,offset1_i,spacing1,dom1);
+		vtk_g.add(g2,offset2,offset2_i,spacing2,dom2);
+		vtk_g.add(g3,offset3,offset3_i,spacing3,dom3);
+		vtk_g.add(g4,offset4,offset4_i,spacing4,dom4);
 
 		openfpm::vector<std::string> prp_names;
-		vtk_g.write("vtk_grids.vti",prp_names);
+		vtk_g.write("vtk_grids.vtu",prp_names);
 
 	#ifndef SE_CLASS3
 
 		// Check that match
-		bool test = compare("vtk_grids.vti","test_data/vtk_grids_test.vti");
+		bool test = compare("vtk_grids.vtu","test_data/vtk_grids_test.vtu");
 		BOOST_REQUIRE_EQUAL(test,true);
 
 	#endif
 	}
+}
 
-// 	{
+BOOST_AUTO_TEST_CASE( vtk_writer_use_grids_umesh_3D)
+{
+	Vcluster<> & v_cl = create_vcluster();
 
-// 		// Create box grids
-// 		Point<2,float> offset1({0.0,0.0});
-// 		Point<2,float> spacing1({0.1,0.2});
-// 		Box<2,size_t> d1({1,2},{14,15});
+	if (v_cl.getProcessUnitID() != 0)
+	{return;}
 
-// 		// Create box grids
-// 		Point<2,float> offset2({5.0,7.0});
-// 		Point<2,float> spacing2({0.2,0.1});
-// 		Box<2,size_t> d2({2,1},{13,15});
+	{
 
-// 		// Create box grids
-// 		Point<2,float> offset3({0.0,7.0});
-// 		Point<2,float> spacing3({0.05,0.07});
-// 		Box<2,size_t> d3({3,2},{11,10});
+		// Create box grids
+		Point<3,long int> offset1_i({-1,-1,-1});
+		Point<3,double> offset1({-0.1,-0.1,-0.1});
+		Point<3,double> spacing1({0.1,0.1,0.1});
+		Box<3,size_t> dom1({1,1,1},{5,5,5});
 
-// 		// Create box grids
-// 		Point<2,float> offset4({5.0,0.0});
-// 		Point<2,float> spacing4({0.1,0.1});
-// 		Box<2,size_t> d4({1,1},{7,7});
+		// Create box grids
+		Point<3,long int> offset2_i({4,-1,-1});
+		Point<3,double> offset2({0.4,-0.1,-0.1});
+		Point<3,double> spacing2({0.1,0.1,0.1});
+		Box<3,size_t> dom2({1,1,1},{6,5,5});
 
-// 		size_t sz[] = {16,16};
-// 		grid_cpu<2,Point_test<float>> g1(sz);
-// 		g1.setMemory();
-// 		fill_grid_some_data(g1);
-// 		grid_cpu<2,Point_test<float>> g2(sz);
-// 		g2.setMemory();
-// 		fill_grid_some_data(g2);
-// 		grid_cpu<2,Point_test<float>> g3(sz);
-// 		g3.setMemory();
-// 		fill_grid_some_data(g3);
-// 		grid_cpu<2,Point_test<float>> g4(sz);
-// 		g4.setMemory();
-// 		fill_grid_some_data(g4);
+		// Create box grids
+		Point<3,long int> offset3_i({-1,4,-1});
+		Point<3,double> offset3({-0.1,0.4,-0.1});
+		Point<3,double> spacing3({0.1,0.1,0.1});
+		Box<3,size_t> dom3({1,1,1},{5,6,5});
 
-// 		// Create a writer and write
-// 		VTKWriter<boost::mpl::pair<grid_cpu<2,Point_test<float>>,float>,VECTOR_GRIDS> vtk_g;
-// 		vtk_g.add(g1,offset1,spacing1,d1);
-// 		vtk_g.add(g2,offset2,spacing2,d2);
-// 		vtk_g.add(g3,offset3,spacing3,d3);
-// 		vtk_g.add(g4,offset4,spacing4,d4);
+		// Create box grids
+		Point<3,long int> offset4_i({4,4,-1});
+		Point<3,double> offset4({0.4,0.4,-0.1});
+		Point<3,double> spacing4({0.1,0.1,0.1});
+		Box<3,size_t> dom4({1,1,1},{6,6,5});
 
-// 		openfpm::vector<std::string> prp_names;
-// 		vtk_g.write("vtk_grids.vtp",prp_names);
+		size_t sz1[] = {5+2,5+2,5+2};
+		grid_cpu<3,Point_test<double>> g1(sz1);
+		g1.setMemory();
+		fill_grid_some_data(g1);
+		size_t sz2[] = {6+2,5+2,5+2};
+		grid_cpu<3,Point_test<double>> g2(sz2);
+		g2.setMemory();
+		fill_grid_some_data(g2);
+		size_t sz3[] = {5+2,6+2,5+2};
+		grid_cpu<3,Point_test<double>> g3(sz3);
+		g3.setMemory();
+		fill_grid_some_data(g3);
+		size_t sz4[] = {6+2,6+2,5+2};
+		grid_cpu<3,Point_test<double>> g4(sz4);
+		g4.setMemory();
+		fill_grid_some_data(g4);
 
-// 	#ifndef SE_CLASS3
+		g4.template get<Point_test<double>::s>(0) = 1.0/3.0;
 
-// 		// Check that match
-// 		bool test = compare("vtk_grids.vtp","test_data/vtk_grids_test.vtp");
-// 		BOOST_REQUIRE_EQUAL(test,true);
+		// Create a writer and write
+		VTKWriter<boost::mpl::pair<grid_cpu<3,Point_test<double>>,double>,VECTOR_GRIDS_UMESH> vtk_g;
 
-// 	#endif
-// 	}
+		vtk_g.add(g1,offset1,offset1_i,spacing1,dom1);
+		vtk_g.add(g2,offset2,offset2_i,spacing2,dom2);
+		vtk_g.add(g3,offset3,offset3_i,spacing3,dom3);
+		vtk_g.add(g4,offset4,offset4_i,spacing4,dom4);
 
-// 	{
-// 	// Create box grids
-// 	Point<2,float> offset1({0.0,0.0});
-// 	Point<2,float> spacing1({0.1,0.1});
-// 	Box<2,size_t> d1({1,2},{14,15});
+		openfpm::vector<std::string> prp_names;
+		vtk_g.write("vtk_grids_3D.vtu",prp_names);
 
-// 	// Create box grids
-// 	Point<2,float> offset2({0.0,0.0});
-// 	Point<2,float> spacing2({0.1,0.1});
-// 	Box<2,size_t> d2({2,1},{13,15});
+	#ifndef SE_CLASS3
 
-// 	// Create box grids
-// 	Point<2,float> offset3({5.0,5.0});
-// 	Point<2,float> spacing3({0.1,0.1});
-// 	Box<2,size_t> d3({3,2},{11,10});
+		// Check that match
+		bool test = compare("vtk_grids_3D.vtu","test_data/vtk_grids_3D_test.vtu");
+		BOOST_REQUIRE_EQUAL(test,true);
 
-// 	// Create box grids
-// 	Point<2,float> offset4({5.0,5.0});
-// 	Point<2,float> spacing4({0.1,0.1});
-// 	Box<2,size_t> d4({1,1},{7,7});
-
-// 	size_t sz[] = {16,16};
-// 	grid_cpu<2,Point_test<float>> g1(sz);
-// 	g1.setMemory();
-// 	fill_grid_some_data(g1);
-// 	grid_cpu<2,Point_test<float>> g2(sz);
-// 	g2.setMemory();
-// 	fill_grid_some_data(g2);
-// 	grid_cpu<2,Point_test<float>> g3(sz);
-// 	g3.setMemory();
-// 	fill_grid_some_data(g3);
-// 	grid_cpu<2,Point_test<float>> g4(sz);
-// 	g4.setMemory();
-// 	fill_grid_some_data(g4);
-
-// 	comb<2> cmb;
-// 	cmb.zero();
-
-// 	comb<2> cmb2;
-// 	cmb2.mone();
-
-// 	// Create a writer and write
-// 	VTKWriter<boost::mpl::pair<grid_cpu<2,Point_test<float>>,float>,VECTOR_ST_GRIDS> vtk_g;
-// 	vtk_g.add(0,g1,offset1,spacing1,d1,cmb);
-// 	vtk_g.add(0,g2,offset2,spacing2,d2,cmb);
-// 	vtk_g.add(1,g3,offset3,spacing3,d3,cmb);
-// 	vtk_g.add(1,g4,offset4,spacing4,d4,cmb2);
-
-// 	vtk_g.write("vtk_grids_st.vtk");
-
-// 	// Check that match
-// 	bool test = compare("vtk_grids_st.vtk","test_data/vtk_grids_st_test.vtk");
-// 	BOOST_REQUIRE_EQUAL(test,true);
-// 	}
-
-// 	{
-// 	// Create box grids
-// 	Point<2,float> offset1({0.0,0.0});
-// 	Point<2,float> spacing1({0.1,0.1});
-// 	Box<2,size_t> d1({1,2},{14,15});
-
-// 	// Create box grids
-// 	Point<2,float> offset2({0.0,0.0});
-// 	Point<2,float> spacing2({0.1,0.1});
-// 	Box<2,size_t> d2({2,1},{13,15});
-
-// 	// Create box grids
-// 	Point<2,float> offset3({5.0,5.0});
-// 	Point<2,float> spacing3({0.1,0.1});
-// 	Box<2,size_t> d3({3,2},{11,10});
-
-// 	// Create box grids
-// 	Point<2,float> offset4({5.0,5.0});
-// 	Point<2,float> spacing4({0.1,0.1});
-// 	Box<2,size_t> d4({1,1},{7,7});
-
-// 	size_t sz[] = {16,16};
-// 	grid_cpu<2,Point_test_scal<float>> g1(sz);
-// 	g1.setMemory();
-// 	fill_grid_some_data_scal(g1);
-// 	grid_cpu<2,Point_test_scal<float>> g2(sz);
-// 	g2.setMemory();
-// 	fill_grid_some_data_scal(g2);
-// 	grid_cpu<2,Point_test_scal<float>> g3(sz);
-// 	g3.setMemory();
-// 	fill_grid_some_data_scal(g3);
-// 	grid_cpu<2,Point_test_scal<float>> g4(sz);
-// 	g4.setMemory();
-// 	fill_grid_some_data_scal(g4);
-
-// 	// Create a writer and write
-// 	VTKWriter<boost::mpl::pair<grid_cpu<2,Point_test_scal<float>>,float>,VECTOR_GRIDS> vtk_g;
-// 	vtk_g.add(g1,offset1,spacing1,d1);
-// 	vtk_g.add(g2,offset2,spacing2,d2);
-// 	vtk_g.add(g3,offset3,spacing3,d3);
-// 	vtk_g.add(g4,offset4,spacing4,d4);
-
-// 	openfpm::vector<std::string> prp_names;
-// 	vtk_g.write("vtk_grids_prp.vtp",prp_names);
-
-// 	// Check that match
-// 	bool test = compare("vtk_grids_prp.vtp","test_data/vtk_grids_prp_test.vtp");
-// 	BOOST_REQUIRE_EQUAL(test,true);
-// 	}
-
-// 	{
-// 	// Create box grids
-// 	Point<2,float> offset1({0.0,0.0});
-// 	Point<2,float> spacing1({0.1,0.2});
-// 	Box<2,size_t> d1({1,2},{14,15});
-
-// 	// Create box grids
-// 	Point<2,float> offset2({5.0,7.0});
-// 	Point<2,float> spacing2({0.2,0.1});
-// 	Box<2,size_t> d2({2,1},{13,15});
-
-// 	// Create box grids
-// 	Point<2,float> offset3({0.0,7.0});
-// 	Point<2,float> spacing3({0.05,0.07});
-// 	Box<2,size_t> d3({3,2},{11,10});
-
-// 	// Create box grids
-// 	Point<2,float> offset4({5.0,0.0});
-// 	Point<2,float> spacing4({0.1,0.1});
-// 	Box<2,size_t> d4({1,1},{7,7});
-
-// 	size_t sz[] = {16,16};
-// 	grid_cpu<2,aggregate<float,float,float,float,float[3],float[3][3],openfpm::vector<int>> > g1(sz);
-// 	g1.setMemory();
-// 	fill_grid_some_data(g1);
-// 	grid_cpu<2,aggregate<float,float,float,float,float[3],float[3][3],openfpm::vector<int>> > g2(sz);
-// 	g2.setMemory();
-// 	fill_grid_some_data(g2);
-// 	grid_cpu<2,aggregate<float,float,float,float,float[3],float[3][3],openfpm::vector<int>> > g3(sz);
-// 	g3.setMemory();
-// 	fill_grid_some_data(g3);
-// 	grid_cpu<2,aggregate<float,float,float,float,float[3],float[3][3],openfpm::vector<int>> > g4(sz);
-// 	g4.setMemory();
-// 	fill_grid_some_data(g4);
-
-// 	// Create a writer and write
-// 	VTKWriter<boost::mpl::pair<grid_cpu<2,aggregate<float,float,float,float,float[3],float[3][3],openfpm::vector<int>> >,float>,VECTOR_GRIDS> vtk_g;
-// 	vtk_g.add(g1,offset1,spacing1,d1);
-// 	vtk_g.add(g2,offset2,spacing2,d2);
-// 	vtk_g.add(g3,offset3,spacing3,d3);
-// 	vtk_g.add(g4,offset4,spacing4,d4);
-
-// 	openfpm::vector<std::string> prp_names;
-// 	vtk_g.write("vtk_grids_unk.vtp",prp_names);
-
-// #ifndef SE_CLASS3
-
-// 	// Check that match
-// 	bool test = compare("vtk_grids_unk.vtp","test_data/vtk_grids_test.vtp");
-// 	BOOST_REQUIRE_EQUAL(test,true);
-
-// #endif
-
-// 	}
-
-// 	// Try
-
-// 	{
-// 		bool ret = is_vtk_writable<Point<3,float>>::value;
-// 		BOOST_REQUIRE_EQUAL(ret,true);
-// 		ret = is_vtk_writable<Point<3,double>>::value;
-// 		BOOST_REQUIRE_EQUAL(ret,true);
-
-// 		int  dims = vtk_dims<Point<3,float>>::value;
-// 		BOOST_REQUIRE_EQUAL(dims,3);
-
-// 		dims = vtk_dims<long int>::value;
-// 		BOOST_REQUIRE_EQUAL(dims,1);
-// 	}
-
+	#endif
+	}
 }
 
 BOOST_AUTO_TEST_CASE( vtk_writer_use_point_set )
@@ -1448,15 +1294,15 @@ BOOST_AUTO_TEST_CASE( vtk_writer_use_point_set_check_out_precision )
 
 	for (size_t i = 0 ; i < v1ps.size(); i++)
 	{
-		v1ps.template get<0>(i)[0] = std::numeric_limits<double>::max();
-		v1ps.template get<0>(i)[1] = std::numeric_limits<double>::max();
-		v1ps.template get<0>(i)[2] = std::numeric_limits<double>::max();
+		v1ps.template get<0>(i)[0] = 1.0 / 3.0;
+		v1ps.template get<0>(i)[1] = 1.0 / 3.0;
+		v1ps.template get<0>(i)[2] = 1.0 / 3.0;
 
 
-		v1pp.template get<0>(i) = std::numeric_limits<float>::max();
-		v1pp.template get<1>(i)[0] = std::numeric_limits<double>::max();
-		v1pp.template get<1>(i)[1] = std::numeric_limits<double>::max();
-		v1pp.template get<1>(i)[2] = std::numeric_limits<double>::max();
+		v1pp.template get<0>(i) = 1.0 / 3.0;
+		v1pp.template get<1>(i)[0] = 1.0 / 3.0;
+		v1pp.template get<1>(i)[1] = 1.0 / 3.0;
+		v1pp.template get<1>(i)[2] = 1.0 / 3.0;
 	}
 
 	openfpm::vector<std::string> prop_names;
@@ -1691,6 +1537,477 @@ BOOST_AUTO_TEST_CASE( vtk_writer_use_point_set_binary )
 		BOOST_REQUIRE_EQUAL(test,true);
 
 #endif
+	}
+}
+
+
+template<typename AMR_grid_type, typename IT_type>
+void process_level(AMR_grid_type & sg_dist, IT_type & dom, int i)
+{
+	double max = 0.0;
+	double min = 10000.0;
+
+	while (dom.isNext())
+	{
+		auto key = dom.get_dist();
+		auto pos = sg_dist.getPos(i,key);
+
+		double x = pos.get(0);
+		double y = pos.get(1);
+		double z = pos.get(2);
+
+		// Calculate gradient magnitude
+		Point<3,double> p({-2.0*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 ),
+						-2.0*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 ),
+						-2.0*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 )});
+
+		int ll = 10.2*p.norm();
+
+		if (ll == i)
+		{
+			grid_dist_amr_key<3> k(i,key);
+
+			pos = sg_dist.getPos(k);
+			x = pos.get(0);
+			y = pos.get(1);
+			z = pos.get(2);
+			sg_dist.template insert<0>(k) = exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<1>(k)[0] = -2.0*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<1>(k)[1] = -2.0*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<1>(k)[2] = -2.0*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[0][0] = -2.0*(x-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[0][1] = -2.0*(x-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[0][2] = -2.0*(x-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[1][0] = -2.0*(y-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[1][1] = -2.0*(y-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[1][2] = -2.0*(y-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[2][0] = -2.0*(z-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[2][1] = -2.0*(z-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[2][2] = -2.0*(z-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+
+			k = k.move(0,1);
+			pos = sg_dist.getPos(k);
+			x = pos.get(0);
+			y = pos.get(1);
+			z = pos.get(2);
+			sg_dist.template insert<0>(k) = exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<1>(k)[0] = -2.0*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<1>(k)[1] = -2.0*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<1>(k)[2] = -2.0*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[0][0] = -2.0*(x-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[0][1] = -2.0*(x-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[0][2] = -2.0*(x-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[1][0] = -2.0*(y-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[1][1] = -2.0*(y-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[1][2] = -2.0*(y-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[2][0] = -2.0*(z-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[2][1] = -2.0*(z-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[2][2] = -2.0*(z-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+
+			k = k.move(1,1);
+			pos = sg_dist.getPos(k);
+			x = pos.get(0);
+			y = pos.get(1);
+			z = pos.get(2);
+			sg_dist.template insert<0>(k) = exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<1>(k)[0] = -2.0*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<1>(k)[1] = -2.0*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<1>(k)[2] = -2.0*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[0][0] = -2.0*(x-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[0][1] = -2.0*(x-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[0][2] = -2.0*(x-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[1][0] = -2.0*(y-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[1][1] = -2.0*(y-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[1][2] = -2.0*(y-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[2][0] = -2.0*(z-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[2][1] = -2.0*(z-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[2][2] = -2.0*(z-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+
+			k = k.move(0,-1);
+			pos = sg_dist.getPos(k);
+			x = pos.get(0);
+			y = pos.get(1);
+			z = pos.get(2);
+			sg_dist.template insert<0>(k) = exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<1>(k)[0] = -2.0*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<1>(k)[1] = -2.0*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<1>(k)[2] = -2.0*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[0][0] = -2.0*(x-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[0][1] = -2.0*(x-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[0][2] = -2.0*(x-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[1][0] = -2.0*(y-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[1][1] = -2.0*(y-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[1][2] = -2.0*(y-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[2][0] = -2.0*(z-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[2][1] = -2.0*(z-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[2][2] = -2.0*(z-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+
+			k = k.move(2,1);
+			pos = sg_dist.getPos(k);
+			x = pos.get(0);
+			y = pos.get(1);
+			z = pos.get(2);
+			sg_dist.template insert<0>(k) = exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<1>(k)[0] = -2.0*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<1>(k)[1] = -2.0*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<1>(k)[2] = -2.0*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[0][0] = -2.0*(x-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[0][1] = -2.0*(x-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[0][2] = -2.0*(x-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[1][0] = -2.0*(y-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[1][1] = -2.0*(y-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[1][2] = -2.0*(y-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[2][0] = -2.0*(z-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[2][1] = -2.0*(z-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[2][2] = -2.0*(z-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+
+			k = k.move(1,-1);
+			pos = sg_dist.getPos(k);
+			x = pos.get(0);
+			y = pos.get(1);
+			z = pos.get(2);
+			sg_dist.template insert<0>(k) = exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<1>(k)[0] = -2.0*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<1>(k)[1] = -2.0*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<1>(k)[2] = -2.0*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[0][0] = -2.0*(x-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[0][1] = -2.0*(x-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[0][2] = -2.0*(x-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[1][0] = -2.0*(y-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[1][1] = -2.0*(y-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[1][2] = -2.0*(y-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[2][0] = -2.0*(z-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[2][1] = -2.0*(z-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[2][2] = -2.0*(z-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+
+			k = k.move(0,1);
+			pos = sg_dist.getPos(k);
+			x = pos.get(0);
+			y = pos.get(1);
+			z = pos.get(2);
+			sg_dist.template insert<0>(k) = exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<1>(k)[0] = -2.0*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<1>(k)[1] = -2.0*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<1>(k)[2] = -2.0*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[0][0] = -2.0*(x-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[0][1] = -2.0*(x-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[0][2] = -2.0*(x-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[1][0] = -2.0*(y-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[1][1] = -2.0*(y-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[1][2] = -2.0*(y-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[2][0] = -2.0*(z-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[2][1] = -2.0*(z-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[2][2] = -2.0*(z-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+		
+			k = k.move(1,1);
+			pos = sg_dist.getPos(k);
+			x = pos.get(0);
+			y = pos.get(1);
+			z = pos.get(2);
+			sg_dist.template insert<0>(k) = exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<1>(k)[0] = -2.0*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<1>(k)[1] = -2.0*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<1>(k)[2] = -2.0*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[0][0] = -2.0*(x-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[0][1] = -2.0*(x-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[0][2] = -2.0*(x-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[1][0] = -2.0*(y-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[1][1] = -2.0*(y-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[1][2] = -2.0*(y-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[2][0] = -2.0*(z-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[2][1] = -2.0*(z-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+			sg_dist.template insert<2>(k)[2][2] = -2.0*(z-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+		}
+		else if (ll > i)
+		{
+			// Add down
+			grid_dist_amr_key<3> k(i,key);
+
+			sg_dist.moveLvlDw(k);
+
+			for (int ii = 0 ; ii < 3 ; ii++)
+			{
+				for (int jj = 0 ; jj < 3 ; jj++)
+				{
+					for(int kk = 0 ; kk < 3 ; kk++)
+					{
+						auto km = k.move(0,ii).move(1,jj).move(2,kk);
+
+						auto pos = sg_dist.getPos(km);
+
+						double x = pos.get(0);
+						double y = pos.get(1);
+						double z = pos.get(2);
+
+						// Calculate gradient magnitude
+						Point<3,double> p({-2.0*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 ),
+									-2.0*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 ),
+									-2.0*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 )});
+
+						int ll = 10.2*p.norm();
+
+						sg_dist.template insert<0>(km) = exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+						sg_dist.template insert<1>(km)[0] = -2.0*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+						sg_dist.template insert<1>(km)[1] = -2.0*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+						sg_dist.template insert<1>(km)[2] = -2.0*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+
+						sg_dist.template insert<2>(km)[0][0] = -2.0*(x-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+						sg_dist.template insert<2>(km)[0][1] = -2.0*(x-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+						sg_dist.template insert<2>(km)[0][2] = -2.0*(x-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+						sg_dist.template insert<2>(km)[1][0] = -2.0*(y-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+						sg_dist.template insert<2>(km)[1][1] = -2.0*(y-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+						sg_dist.template insert<2>(km)[1][2] = -2.0*(y-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+						sg_dist.template insert<2>(km)[2][0] = -2.0*(z-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+						sg_dist.template insert<2>(km)[2][1] = -2.0*(z-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+						sg_dist.template insert<2>(km)[2][2] = -2.0*(z-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
+					}
+				}
+			}
+		}
+
+		++dom;
+	}
+}
+
+template<typename AMR_grid_type, typename IT_type>
+void process_level2D(AMR_grid_type & sg_dist, IT_type & dom, int i)
+{
+	double max = 0.0;
+	double min = 10000.0;
+
+	while (dom.isNext())
+	{
+		auto key = dom.get_dist();
+		auto pos = sg_dist.getPos(i,key);
+
+		double x = pos.get(0);
+		double y = pos.get(1);
+
+		// Calculate gradient magnitude
+		Point<2,double> p({-2.0*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5)) / 0.1 ),
+						-2.0*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 )});
+
+		int ll = 10.2*p.norm();
+
+		if (ll == i)
+		{
+			grid_dist_amr_key<2> k(i,key);
+
+			pos = sg_dist.getPos(k);
+			x = pos.get(0);
+			y = pos.get(1);
+
+			sg_dist.template insert<0>(k) = exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+			sg_dist.template insert<1>(k)[0] = -2.0*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5)  ) / 0.1 );
+			sg_dist.template insert<1>(k)[1] = -2.0*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5)  ) / 0.1 );
+			sg_dist.template insert<2>(k)[0][0] = -2.0*(x-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+			sg_dist.template insert<2>(k)[0][1] = -2.0*(x-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+			sg_dist.template insert<2>(k)[1][0] = -2.0*(y-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+			sg_dist.template insert<2>(k)[1][1] = -2.0*(y-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+
+			k = k.move(0,1);
+			pos = sg_dist.getPos(k);
+			x = pos.get(0);
+			y = pos.get(1);
+			sg_dist.template insert<0>(k) = exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+			sg_dist.template insert<1>(k)[0] = -2.0*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+			sg_dist.template insert<1>(k)[1] = -2.0*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+			sg_dist.template insert<2>(k)[0][0] = -2.0*(x-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+			sg_dist.template insert<2>(k)[0][1] = -2.0*(x-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+			sg_dist.template insert<2>(k)[1][0] = -2.0*(y-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+			sg_dist.template insert<2>(k)[1][1] = -2.0*(y-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+
+			k = k.move(1,1);
+			pos = sg_dist.getPos(k);
+			x = pos.get(0);
+			y = pos.get(1);
+			sg_dist.template insert<0>(k) = exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+			sg_dist.template insert<1>(k)[0] = -2.0*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+			sg_dist.template insert<1>(k)[1] = -2.0*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+			sg_dist.template insert<2>(k)[0][0] = -2.0*(x-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+			sg_dist.template insert<2>(k)[0][1] = -2.0*(x-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+			sg_dist.template insert<2>(k)[1][0] = -2.0*(y-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+			sg_dist.template insert<2>(k)[1][1] = -2.0*(y-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+
+			k = k.move(0,-1);
+			pos = sg_dist.getPos(k);
+			x = pos.get(0);
+			y = pos.get(1);
+			sg_dist.template insert<0>(k) = exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+			sg_dist.template insert<1>(k)[0] = -2.0*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+			sg_dist.template insert<1>(k)[1] = -2.0*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+			sg_dist.template insert<2>(k)[0][0] = -2.0*(x-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+			sg_dist.template insert<2>(k)[0][1] = -2.0*(x-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+			sg_dist.template insert<2>(k)[1][0] = -2.0*(y-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+			sg_dist.template insert<2>(k)[1][1] = -2.0*(y-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+		}
+		else if (ll > i)
+		{
+			// Add down
+			grid_dist_amr_key<2> k(i,key);
+
+			sg_dist.moveLvlDw(k);
+
+			for (int ii = 0 ; ii < 3 ; ii++)
+			{
+				for (int jj = 0 ; jj < 3 ; jj++)
+				{
+					auto km = k.move(0,ii).move(1,jj);
+
+					auto pos = sg_dist.getPos(km);
+
+					double x = pos.get(0);
+					double y = pos.get(1);
+
+					// Calculate gradient magnitude
+					Point<2,double> p({-2.0*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 ),
+								-2.0*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 )});
+
+					int ll = 10.2*p.norm();
+
+					sg_dist.template insert<0>(km) = exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+					sg_dist.template insert<1>(km)[0] = -2.0*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+					sg_dist.template insert<1>(km)[1] = -2.0*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+
+					sg_dist.template insert<2>(km)[0][0] = -2.0*(x-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+					sg_dist.template insert<2>(km)[0][1] = -2.0*(x-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+					sg_dist.template insert<2>(km)[1][0] = -2.0*(y-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+					sg_dist.template insert<2>(km)[1][1] = -2.0*(y-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
+				}
+			}
+		}
+
+		++dom;
+	}
+}
+
+BOOST_AUTO_TEST_CASE( vtk_writer_use_amr )
+{
+	Vcluster<> & v_cl = create_vcluster();
+
+	if (v_cl.size() != 1)
+	{return;}
+
+	{
+		// Test grid periodic
+
+		Box<3,float> domain({0.0,0.0,0.0},{1.0,1.0,1.0});
+
+		Vcluster<> & v_cl = create_vcluster();
+
+		if ( v_cl.getProcessingUnits() > 5 )
+		{return;}
+
+		long int k = 13;
+
+		// Ghost
+		Ghost<3,long int> g(1);
+
+		// periodicity
+		periodicity<3> pr = {{NON_PERIODIC,NON_PERIODIC,NON_PERIODIC}};
+
+		// Distributed grid with id decomposition
+		sgrid_dist_amr<3, float, aggregate<float,float[3],float[3][3]>> sg_dist(domain,g,pr);
+
+		size_t sz[3] = {(size_t)13,(size_t)13,(size_t)13};
+
+		sg_dist.initLevels(4,sz);
+
+		for (int i = 0 ; i < 3 ; i++)
+		{
+			if (i == 0)
+			{
+				auto dom = sg_dist.getGridIteratorCells(i);
+
+				process_level(sg_dist,dom,i);
+			}
+			else
+			{
+				auto dom = sg_dist.getDomainIterator(i);
+
+				process_level(sg_dist,dom,i);
+			}
+			sg_dist.template ghost_put<add_,0>();
+		}
+
+		// Create a writer and write
+		VTKWriter<boost::mpl::pair<decltype(sg_dist),double>,AMR_GRID_UMESH> vtk_g;
+
+		openfpm::vector<std::string> prp_names;
+		vtk_g.write(sg_dist,"vtk_amr_grids_3D.vtu",prp_names);
+
+	#ifndef SE_CLASS3
+
+		// Check that match
+		bool test = compare("vtk_amr_grids_3D.vtu","test_data/vtk_amr_grids_3D_test.vtu");
+		BOOST_REQUIRE_EQUAL(test,true);
+
+	#endif
+	}
+}
+
+BOOST_AUTO_TEST_CASE( vtk_writer_use_amr_2d )
+{
+	Vcluster<> & v_cl = create_vcluster();
+
+	if (v_cl.size() != 1)
+	{return;}
+
+	{
+		// Test grid periodic
+
+		Box<2,float> domain({0.0,0.0},{1.0,1.0});
+
+		Vcluster<> & v_cl = create_vcluster();
+
+		if ( v_cl.getProcessingUnits() > 5 )
+		{return;}
+
+		long int k = 13;
+
+		// Ghost
+		Ghost<2,long int> g(1);
+
+		// periodicity
+		periodicity<2> pr = {{NON_PERIODIC,NON_PERIODIC}};
+
+		// Distributed grid with id decomposition
+		sgrid_dist_amr<2, float, aggregate<float,float[2],float[2][2]>> sg_dist(domain,g,pr);
+
+		size_t sz[2] = {(size_t)13,(size_t)13};
+
+		sg_dist.initLevels(4,sz);
+
+		for (int i = 0 ; i < 3 ; i++)
+		{
+			if (i == 0)
+			{
+				auto dom = sg_dist.getGridIteratorCells(i);
+
+				process_level2D(sg_dist,dom,i);
+			}
+			else
+			{
+				auto dom = sg_dist.getDomainIterator(i);
+
+				process_level2D(sg_dist,dom,i);
+			}
+			sg_dist.template ghost_put<add_,0>();
+		}
+
+		// Create a writer and write
+		VTKWriter<boost::mpl::pair<decltype(sg_dist),double>,AMR_GRID_UMESH> vtk_g;
+
+		openfpm::vector<std::string> prp_names;
+		vtk_g.write(sg_dist,"vtk_amr_grids_2D.vtu",prp_names);
+
+	#ifndef SE_CLASS3
+
+		// Check that match
+		bool test = compare("vtk_amr_grids_2D.vtu","test_data/vtk_amr_grids_2D_test.vtu");
+		BOOST_REQUIRE_EQUAL(test,true);
+
+	#endif
 	}
 }
 

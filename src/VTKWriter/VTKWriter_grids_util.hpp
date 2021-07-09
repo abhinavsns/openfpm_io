@@ -11,6 +11,7 @@
 #include "util/util_debug.hpp"
 #include "is_vtk_writable.hpp"
 #include "byteswap_portable.hpp"
+#include "util/mathutil.hpp"
 
 
 /*! \brief Return the Attributes name from the type
@@ -185,6 +186,98 @@ template<unsigned int i, typename aggregate_type> std::string get_point_property
     return v_out;
 }
 
+/*! \brief Get the vtk properties header appending a prefix at the end
+ *
+ * \tparam has_attributes indicate if the properties have attributes name
+ * \param oprp prefix
+ *
+ */
+template<unsigned int i, typename ele_g, bool has_attributes> std::string get_point_property_header_impl_single(const std::string & oprp, const openfpm::vector<std::string> & prop_names,file_type ft)
+{
+	//! vertex node output string
+	std::string v_out;
+
+	typedef typename boost::mpl::at<typename ele_g::value_type::type,boost::mpl::int_<i>>::type ctype;
+
+	// Check if T is a supported format
+	// for now we support only scalar of native type
+	if (std::rank<ctype>::value == 1)
+	{
+		if (std::extent<ctype>::value <= 3)
+		{
+			//Get type of the property
+			std::string type = getTypeNew<typename std::remove_all_extents<ctype>::type>();
+
+			// if the type is not supported skip-it
+			if (type.size() == 0)
+			{
+#ifndef DISABLE_ALL_RTTI
+				std::cerr << "Error " << __FILE__ << ":" << __LINE__ << " the type " << demangle(typeid(ctype).name()) << " is not supported by vtk\n";
+#endif
+				return "";
+			}
+
+			// Create point data properties
+			v_out += "        <DataArray type=\""+type+"\" Name=\""+getAttrName::get(i,prop_names,oprp)+"\""+" NumberOfComponents=\"3\"";
+			if(ft==file_type::ASCII){
+                v_out+=" format=\"ascii\">\n";
+			}
+			else{
+                v_out+=" format=\"binary\">\n";
+            }
+		}
+	}
+	else
+	{
+		std::string type = getTypeNew<typename std::remove_all_extents<ctype>::type>();
+
+		// if the type is not supported return
+		if (type.size() == 0)
+		{
+			// We check if is a custom vtk writable object
+
+			if (is_vtk_writable<ctype>::value == true)
+			{
+				type = getTypeNew<typename vtk_type<ctype,is_custom_vtk_writable<ctype>::value>::type >();
+
+				// We check if it is a vector or scalar like type
+				if (vtk_dims<ctype>::value == 1) 
+                {
+                    v_out += "        <DataArray type=\"" + type + "\" Name=\"" + getAttrName::get(i, prop_names, oprp) + "\"";
+                    if (ft == file_type::ASCII) {
+                        v_out += " format=\"ascii\">\n";
+                    } else {
+                        v_out += " format=\"binary\">\n";
+                    }
+                }
+				else{
+                    v_out += "        <DataArray type=\""+type+"\" Name=\""+getAttrName::get(i,prop_names,oprp)+"\""+" NumberOfComponents=\"3\"";
+                    if(ft==file_type::ASCII){
+                            v_out+=" format=\"ascii\">\n";
+                        }
+                    else{
+                            v_out+=" format=\"binary\">\n";
+                        }
+			    }
+			}
+
+			return v_out;
+		}
+
+		// Create point data properties
+        v_out += "        <DataArray type=\"" + type + "\" Name=\"" +getAttrName::get(i, prop_names, oprp) + "\"";
+        if (ft == file_type::ASCII) {
+            v_out += " format=\"ascii\">\n";
+        }
+        else {
+            v_out += " format=\"binary\">\n";
+        }
+
+	}
+
+	// return the vertex list
+	return v_out;
+}
 
 /*! \brief Get the vtk properties header appending a prefix at the end
  *
@@ -409,6 +502,60 @@ public:
     }
 };
 
+/*! \brief Write the vectror property
+ *
+ * \tparam dim Dimensionality of the property
+ * \tparam T type of the element to write
+ *
+ */
+template<unsigned int dim, typename T>
+class prop_write_out_single
+{
+public:
+
+    /*! \brief Write the property
+     *
+     *  \param v_out output string of the property
+     *  \param ele element to write
+     *  \param ft output type BINARY or ASCII
+     *
+     */
+    template<typename I> static void write(std::ostringstream & v_out, T & ele, file_type ft)
+    {
+
+        if (ft == file_type::ASCII)
+        {
+            // Print the properties
+            for (size_t i1 = 0 ; i1 < vtk_dims<T>::value ; i1++)
+            {
+                v_out << ele.get_vtk(i1) << " ";
+            }
+            if (vtk_dims<T>::value == 2)
+            {
+                v_out << "0.0";
+            }
+            v_out << "\n";
+        }
+        else
+        {
+            typedef decltype(ele.get_vtk(0)) ctype_;
+            typedef typename std::remove_reference<ctype_>::type ctype;
+
+            // Print the properties
+            for (size_t i1 = 0 ; i1 < vtk_dims<T>::value ; i1++)
+            {
+                typename is_vtk_writable<ctype>::base tmp = ele.get_vtk(i1);
+                v_out.write((const char *)&tmp,sizeof(tmp));
+            }
+            if (vtk_dims<T>::value == 2)
+            {
+                typename is_vtk_writable<ctype>::base zero = 0.0;
+                v_out.write((const char *)&zero,sizeof(zero));
+            }
+        }
+    }
+};
+
 /*! \brief Write the scalar property
  *
  *
@@ -445,6 +592,39 @@ public:
     }
 };
 
+/*! \brief Write the scalar property
+ *
+ *
+ */
+template<typename T>
+class prop_write_out_single<1,T>
+{
+public:
+
+    /*! \brief Write the property
+     *
+     *  \param v_out output string of the property
+     *  \param ele element to write
+     *  \param ft output type BINARY or ASCII
+     *
+     */
+    template<typename I> static void write(std::ostringstream & v_out, T & ele, file_type ft)
+    {
+        typedef decltype(ele) ctype_;
+        typedef typename std::remove_const<typename std::remove_reference<ctype_>::type>::type ctype;
+
+        if (ft == file_type::ASCII)
+        {
+            // Print the property
+            v_out << ele << "\n";
+        }
+        else
+        {
+            typename is_vtk_writable<ctype>::base tmp = ele;
+            v_out.write((const char *)&tmp,sizeof(tmp));
+        }
+    }
+};
 
 /*! \brief This class is an helper to create properties output from scalar and compile-time array elements
  *
@@ -779,7 +959,7 @@ struct meta_prop_new_i
 	 * \param ft ASCII or BINARY
 	 *
 	 */
-	inline meta_prop_new_i(unsigned int i, const openfpm::vector< ele_g > & vg, std::string & v_out, const openfpm::vector<std::string> & prop_names, file_type ft)
+	inline meta_prop_new_i(const openfpm::vector< ele_g > & vg, std::string & v_out, const openfpm::vector<std::string> & prop_names, file_type ft)
 	{
     	// actual string size
     	size_t sz = v_out.size();
@@ -802,17 +982,110 @@ struct meta_prop_new_i
                 v_outToEncode_.write((char *)&pp,8);
             }
 
-			//! Get a vertex iterator
-			auto it = vg.get(i).g.getIterator(vg.get(i).dom.getKP1(),vg.get(i).dom.getKP2());
+            for (int i = 0 ; i < vg.size() ; i++)
+            {
+                //! Get a vertex iterator
+                auto bx = vg.get(i).dom;
+			    bx.enlargeP2(1);
+                auto it = vg.get(i).g.getIterator(bx.getKP1(),bx.getKP2());
 
-			// if there is the next element
-			while (it.isNext())
-			{
-				prop_write_out_new<vtk_dims<T>::value,T>::template write<decltype(vg),decltype(it),I>(v_outToEncode_,vg,i,it,ft);
+                // if there is the next element
+                while (it.isNext())
+                {
+                    prop_write_out_new<vtk_dims<T>::value,T>::template write<decltype(vg),decltype(it),I>(v_outToEncode_,vg,i,it,ft);
 
-				// increment the iterator and counter
-				++it;
-			}
+                    // increment the iterator and counter
+                    ++it;
+                }
+            }
+
+            if (ft == file_type::BINARY)
+            {
+                std::string v_outToEncode = v_outToEncode_.str();
+                *(size_t *) &v_outToEncode[0] = v_outToEncode.size()-sizeof(size_t);
+                v_Encoded.resize(v_outToEncode.size()/3*4+4);
+                size_t sz=EncodeToBase64((const unsigned char*)&v_outToEncode[0],v_outToEncode.size(),(unsigned char *)&v_Encoded[0],0);
+                v_Encoded.resize(sz);
+                v_out += v_Encoded + "\n";
+            }
+            else{
+                v_out += v_outToEncode_.str();
+            };
+			v_out += "        </DataArray>\n";
+
+		}
+	}
+};
+
+/*! \brief This class is an helper to create properties output from scalar and compile-time array elements
+ *
+ * \tparam I It is an boost::mpl::int_ that indicate which property we are writing
+ * \tparam ele_g element type that store the grid information
+ * \tparam St type of space where the grid live
+ * \tparam T the type of the property
+ * \tparam is_writable flag that indicate if a property is writable
+ *
+ */
+template<typename I, typename AMR_grid_type, typename St, typename T, bool is_writable>
+struct meta_prop_new_ui
+{
+	/*! \brief Write a vtk compatible type into vtk format
+	 *
+	 * \param vg array of elements to write
+	 * \param v_out string containing the string
+	 * \param prop_names property names
+	 * \param ft ASCII or BINARY
+	 *
+	 */
+	inline meta_prop_new_ui(const AMR_grid_type & amr_g, std::string & v_out, const openfpm::vector<std::string> & prop_names, file_type ft)
+	{
+    	// actual string size
+    	size_t sz = v_out.size();
+    	std::ostringstream v_outToEncode_;
+        std::string v_Encoded;
+
+        if (std::is_same<T,float>::value == true)
+        {v_outToEncode_ << std::setprecision(7);}
+        else
+        {v_outToEncode_ << std::setprecision(16);}
+
+		// Produce the point properties header
+    	v_out += get_point_property_header_impl_single<I::value,AMR_grid_type,false>("",prop_names,ft);
+
+		// If the output has changed, we have to write the properties
+		if (v_out.size() != sz)
+		{
+            if (ft == file_type::BINARY) {
+                size_t pp;
+                v_outToEncode_.write((char *)&pp,8);
+            }
+
+            int lvl = amr_g.getNLvl();
+
+            for (int i = 0 ; i < lvl ; i++)
+            {
+                auto it = amr_g.getDomainIterator(i);
+
+                auto glin_ = amr_g.getLevel(i).getGridInfo();
+
+                size_t sz[AMR_grid_type::dims];
+                for (int j = 0 ; j < AMR_grid_type::dims ; j++)
+                {sz[j] = glin_.size(j)+1;}
+                grid_sm<AMR_grid_type::dims,typename AMR_grid_type::stype> glin(sz);
+
+                // if there is the next element
+                while (it.isNext())
+                {
+                    auto key = it.get();
+                    auto gkey = it.getGKey(key);
+
+                    T v = amr_g.template get<I::value>(i,key);
+
+                    prop_write_out_single<vtk_dims<T>::value,T>::template write<I>(v_outToEncode_,v,ft);
+
+                     ++it;
+                }
+            }
 
             if (ft == file_type::BINARY)
             {
@@ -957,7 +1230,7 @@ struct meta_prop_new_i<I, ele_g,St,T[N1],is_writable>
 	 * \param ft ASCII or BINARY
 	 *
 	 */
-	inline meta_prop_new_i(unsigned int i, const openfpm::vector< ele_g > & vg, std::string & v_out, const openfpm::vector<std::string> & prop_names , file_type ft)
+	inline meta_prop_new_i(const openfpm::vector< ele_g > & vg, std::string & v_out, const openfpm::vector<std::string> & prop_names , file_type ft)
 	{
 	    // actual string size
 	    size_t sz = v_out.size();
@@ -981,44 +1254,49 @@ struct meta_prop_new_i<I, ele_g,St,T[N1],is_writable>
             }
 			// Produce point data
 
-            //! Get a vertex iterator
-            auto it = vg.get(i).g.getIterator(vg.get(i).dom.getKP1(),vg.get(i).dom.getKP2());
-
-            // if there is the next element
-            while (it.isNext())
+            for (int i = 0 ; i < vg.size() ; i++)
             {
-                if (ft == file_type::ASCII)
+                //! Get a vertex iterator
+                auto bx = vg.get(i).dom;
+			    bx.enlargeP2(1);
+                auto it = vg.get(i).g.getIterator(bx.getKP1(),bx.getKP2());
+
+                // if there is the next element
+                while (it.isNext())
                 {
-                    // Print the properties
-                    for (size_t i1 = 0 ; i1 < N1 ; i1++)
-                    {v_outToEncode_ << vg.get(i).g.template get<I::value>(it.get())[i1] << " ";}
-
-                    if (N1 == 2)
-                    {v_outToEncode_ << (decltype(vg.get(i).g.template get<I::value>(it.get())[0])) 0;}
-
-                    v_outToEncode_ << "\n";
-                }
-                else
-                {
-                    T tmp;
-
-                    // Print the properties
-                    for (size_t i1 = 0 ; i1 < N1 ; i1++)
+                    if (ft == file_type::ASCII)
                     {
-                        tmp = vg.get(i).g.template get<I::value>(it.get())[i1];
-                        //tmp = swap_endian_lt(tmp);
-                        v_outToEncode_.write((const char *)&tmp,sizeof(T));
-                    }
-                    if (N1 == 2)
-                    {
-                        tmp = 0.0;
-                        //tmp = swap_endian_lt(tmp);
-                        v_outToEncode_.write((const char *)&tmp,sizeof(T));
-                    }
-                }
+                        // Print the properties
+                        for (size_t i1 = 0 ; i1 < N1 ; i1++)
+                        {v_outToEncode_ << vg.get(i).g.template get<I::value>(it.get())[i1] << " ";}
 
-                // increment the iterator and counter
-                ++it;
+                        if (N1 == 2)
+                        {v_outToEncode_ << (decltype(vg.get(i).g.template get<I::value>(it.get())[0])) 0;}
+
+                        v_outToEncode_ << "\n";
+                    }
+                    else
+                    {
+                        T tmp;
+
+                        // Print the properties
+                        for (size_t i1 = 0 ; i1 < N1 ; i1++)
+                        {
+                            tmp = vg.get(i).g.template get<I::value>(it.get())[i1];
+                            //tmp = swap_endian_lt(tmp);
+                            v_outToEncode_.write((const char *)&tmp,sizeof(T));
+                        }
+                        if (N1 == 2)
+                        {
+                            tmp = 0.0;
+                            //tmp = swap_endian_lt(tmp);
+                            v_outToEncode_.write((const char *)&tmp,sizeof(T));
+                        }
+                    }
+
+                    // increment the iterator and counter
+                    ++it;
+                }
             }
 
             if (ft == file_type::BINARY)
@@ -1035,6 +1313,112 @@ struct meta_prop_new_i<I, ele_g,St,T[N1],is_writable>
             };
             v_out += "        </DataArray>\n";
         }
+	}
+};
+
+template<typename I, typename AMR_grid_type, typename St, typename T, unsigned int N1, bool is_writable>
+struct meta_prop_new_ui<I,AMR_grid_type,St,T[N1],is_writable>
+{
+	/*! \brief Write a vtk compatible type into vtk format
+	 *
+	 * \param vg array of elements to write
+	 * \param v_out string containing the string
+	 * \param prop_names property names
+	 * \param ft ASCII or BINARY
+	 *
+	 */
+	inline meta_prop_new_ui(const AMR_grid_type & amr_g, std::string & v_out, const openfpm::vector<std::string> & prop_names, file_type ft)
+	{
+    	// actual string size
+    	size_t sz = v_out.size();
+    	std::ostringstream v_outToEncode_;
+        std::string v_Encoded;
+
+        if (std::is_same<T,float>::value == true)
+        {v_outToEncode_ << std::setprecision(7);}
+        else
+        {v_outToEncode_ << std::setprecision(16);}
+
+		// Produce the point properties header
+    	v_out += get_point_property_header_impl_single<I::value,AMR_grid_type,false>("",prop_names,ft);
+
+		// If the output has changed, we have to write the properties
+		if (v_out.size() != sz)
+		{
+            if (ft == file_type::BINARY) {
+                size_t pp;
+                v_outToEncode_.write((char *)&pp,8);
+            }
+
+            int lvl = amr_g.getNLvl();
+
+            for (int i = 0 ; i < lvl ; i++)
+            {
+                auto it = amr_g.getDomainIterator(i);
+
+                auto glin_ = amr_g.getLevel(i).getGridInfo();
+
+                size_t sz[AMR_grid_type::dims];
+                for (int j = 0 ; j < AMR_grid_type::dims ; j++)
+                {sz[j] = glin_.size(j)+1;}
+                grid_sm<AMR_grid_type::dims,typename AMR_grid_type::stype> glin(sz);
+
+                // if there is the next element
+                while (it.isNext())
+                {
+                    auto key = it.get();
+                    auto gkey = it.getGKey(key);
+
+                    if (ft == file_type::ASCII)
+                    {
+                        // Print the properties
+                        for (size_t i1 = 0 ; i1 < N1 ; i1++)
+                        {v_outToEncode_ << amr_g.template get<I::value>(i,key)[i1] << " ";}
+
+                        if (N1 == 2)
+                        {v_outToEncode_ << (typename std::remove_reference<decltype(amr_g.template get<I::value>(i,key)[0])>::type ) 0;}
+
+                        v_outToEncode_ << "\n";
+                    }
+                    else
+                    {
+                        T tmp;
+
+                        // Print the properties
+                        for (size_t i1 = 0 ; i1 < N1 ; i1++)
+                        {
+                            tmp = amr_g.template get<I::value>(i,key)[i1];
+                            //tmp = swap_endian_lt(tmp);
+                            v_outToEncode_.write((const char *)&tmp,sizeof(T));
+                        }
+                        if (N1 == 2)
+                        {
+                            tmp = 0.0;
+                            //tmp = swap_endian_lt(tmp);
+                            v_outToEncode_.write((const char *)&tmp,sizeof(T));
+                        }
+                    }
+
+
+                    ++it;
+                }
+            }
+
+            if (ft == file_type::BINARY)
+            {
+                std::string v_outToEncode = v_outToEncode_.str();
+                *(size_t *) &v_outToEncode[0] = v_outToEncode.size()-sizeof(size_t);
+                v_Encoded.resize(v_outToEncode.size()/3*4+4);
+                size_t sz=EncodeToBase64((const unsigned char*)&v_outToEncode[0],v_outToEncode.size(),(unsigned char *)&v_Encoded[0],0);
+                v_Encoded.resize(sz);
+                v_out += v_Encoded + "\n";
+            }
+            else{
+                v_out += v_outToEncode_.str();
+            };
+			v_out += "        </DataArray>\n";
+
+		}
 	}
 };
 
@@ -1142,7 +1526,7 @@ struct meta_prop_new_i<I, ele_g,St, T[N1][N2],is_writable>
 	 * \param ft ASCII or BINARY
 	 *
 	 */
-	inline meta_prop_new_i(unsigned int i, const openfpm::vector< ele_g > & vg, std::string & v_out, const openfpm::vector<std::string> & prop_names, file_type ft)
+	inline meta_prop_new_i(const openfpm::vector< ele_g > & vg, std::string & v_out, const openfpm::vector<std::string> & prop_names, file_type ft)
 	{
         std::string v_outToEncode,v_Encoded;
 
@@ -1165,28 +1549,33 @@ struct meta_prop_new_i<I, ele_g,St, T[N1][N2],is_writable>
                     }
 					// Produce point data
 
-                    //! Get a vertex iterator
-                    auto it = vg.get(i).g.getIterator(vg.get(i).dom.getKP1(),vg.get(i).dom.getKP2());
+					for (size_t i = 0 ; i < vg.size() ; i++)
+					{
+                        //! Get a vertex iterator
+                        auto bx = vg.get(i).dom;
+			            bx.enlargeP2(1);
+                        auto it = vg.get(i).g.getIterator(bx.getKP1(),bx.getKP2());
 
-                    // if there is the next element
-                    while (it.isNext())
-                    {
-                        T tmp;
-
-                        if (ft == file_type::ASCII)
+                        // if there is the next element
+                        while (it.isNext())
                         {
-                            // Print the property
-                            v_outToEncode += std::to_string(vg.get(i).g.template get<I::value>(it.get())[i1][i2]) + "\n";
-                        }
-                        else
-                        {
-                            tmp = vg.get(i).g.template get<I::value>(it.get())[i1][i2];
-                            //tmp = swap_endian_lt(tmp);
-                            v_outToEncode.append((const char *)&tmp,sizeof(tmp));
-                        }
+                            T tmp;
 
-                        // increment the iterator and counter
-                        ++it;
+                            if (ft == file_type::ASCII)
+                            {
+                                // Print the property
+                                v_outToEncode += std::to_string(vg.get(i).g.template get<I::value>(it.get())[i1][i2]) + "\n";
+                            }
+                            else
+                            {
+                                tmp = vg.get(i).g.template get<I::value>(it.get())[i1][i2];
+                                //tmp = swap_endian_lt(tmp);
+                                v_outToEncode.append((const char *)&tmp,sizeof(tmp));
+                            }
+
+                            // increment the iterator and counter
+                            ++it;
+                        }
                     }
 
                     if (ft == file_type::BINARY)
@@ -1205,6 +1594,92 @@ struct meta_prop_new_i<I, ele_g,St, T[N1][N2],is_writable>
                 }
 			}
 		}
+	}
+};
+
+template<typename I, typename AMR_grid_type, typename St, typename T, unsigned int N1, unsigned int N2, bool is_writable>
+struct meta_prop_new_ui<I,AMR_grid_type,St,T[N1][N2],is_writable>
+{
+	/*! \brief Write a vtk compatible type into vtk format
+	 *
+	 * \param vg array of elements to write
+	 * \param v_out string containing the string
+	 * \param prop_names property names
+	 * \param ft ASCII or BINARY
+	 *
+	 */
+	inline meta_prop_new_ui(const AMR_grid_type & amr_g, std::string & v_out, const openfpm::vector<std::string> & prop_names, file_type ft)
+	{
+    	// actual string size
+    	size_t sz = v_out.size();
+    	std::ostringstream v_outToEncode_;
+        std::string v_Encoded;
+
+        for (size_t i1 = 0 ; i1 < N1 ; i1++)
+		{
+			for (size_t i2 = 0 ; i2 < N2 ; i2++)
+			{
+
+                if (std::is_same<T,float>::value == true)
+                {v_outToEncode_ << std::setprecision(7);}
+                else
+                {v_outToEncode_ << std::setprecision(16);}
+
+                // Produce the point properties header
+                v_out += get_point_property_header_impl_single<I::value,AMR_grid_type,false>("_" + std::to_string(i1) + "_" + std::to_string(i2),prop_names,ft);
+
+                // If the output has changed, we have to write the properties
+                if (v_out.size() != sz)
+                {
+                    if (ft == file_type::BINARY) {
+                        size_t pp;
+                        v_outToEncode_.write((char *)&pp,8);
+                    }
+
+                    int lvl = amr_g.getNLvl();
+
+                    for (int i = 0 ; i < lvl ; i++)
+                    {
+                        auto it = amr_g.getDomainIterator(i);
+
+                        auto glin_ = amr_g.getLevel(i).getGridInfo();
+
+                        size_t sz[AMR_grid_type::dims];
+                        for (int j = 0 ; j < AMR_grid_type::dims ; j++)
+                        {sz[j] = glin_.size(j)+1;}
+                        grid_sm<AMR_grid_type::dims,typename AMR_grid_type::stype> glin(sz);
+
+                        // if there is the next element
+                        while (it.isNext())
+                        {
+                            auto key = it.get();
+                            auto gkey = it.getGKey(key);
+
+                            T v = amr_g.template get<I::value>(i,key)[i1][i2];
+
+                            prop_write_out_single<vtk_dims<T>::value,T>::template write<I>(v_outToEncode_,v,ft);
+
+                            ++it;
+                        }
+                    }
+
+                    if (ft == file_type::BINARY)
+                    {
+                        std::string v_outToEncode = v_outToEncode_.str();
+                        *(size_t *) &v_outToEncode[0] = v_outToEncode.size()-sizeof(size_t);
+                        v_Encoded.resize(v_outToEncode.size()/3*4+4);
+                        size_t sz=EncodeToBase64((const unsigned char*)&v_outToEncode[0],v_outToEncode.size(),(unsigned char *)&v_Encoded[0],0);
+                        v_Encoded.resize(sz);
+                        v_out += v_Encoded + "\n";
+                    }
+                    else{
+                        v_out += v_outToEncode_.str();
+                    };
+                    v_out += "        </DataArray>\n";
+
+                }
+            }
+        }
 	}
 };
 
@@ -1410,7 +1885,7 @@ bool write_pvtp_impl(std::string file,const openfpm::vector<std::string> & prop_
         PpointEnd += "    <PPoints>\n      <PDataArray type=\""+getTypeNew<coord_type>()+"\" Name=\"Points\" NumberOfComponents=\"3\"/>\n    </PPoints>\n";
 
 
-        if (timestamp==-1) {
+        if (timestamp==(size_t)-1) {
             for (int i = 0; i < n; i++)
             { Piece += "    <Piece Source=\"" + file.substr(0, file.size()) + "_" +std::to_string(i) + ".vtp\"/>\n";}
             file +=  ".pvtp";
