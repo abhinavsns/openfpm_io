@@ -58,6 +58,15 @@ struct GBoxes
 	{
 		return true;
 	}
+
+	bool operator==(const GBoxes & tmp)
+	{
+		bool is_equal = GDbox == tmp.GDbox;
+		is_equal &= Dbox == tmp.Dbox;
+		is_equal &= origin == tmp.origin;
+
+		return is_equal;
+	}
 };
 
 

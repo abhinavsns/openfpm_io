@@ -1,20 +1,12 @@
 cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 
-set(CMAKE_SKIP_BUILD_RPATH TRUE)   ###### <--------- This is absolutely necessary if you use linear algebra
-
 ########################### Executables
 
-if (CUDA_ON_CPU)
-	add_definitions(-DCUDA_ON_CPU)
-endif()
-
-if (CUDA_FOUND OR CUDA_ON_CPU OR HIP_FOUND)
-
+if(NOT CUDA_ON_BACKEND STREQUAL "None")
 	set(CUDA_SOURCES HDF5_wr/HDF5_writer_cuda.cu)
-
 endif()
 
-if ( HIP_ENABLE AND HIP_FOUND )
+if ( CUDA_ON_BACKEND STREQUAL "HIP" AND HIP_FOUND )
 
         list(APPEND HIP_HIPCC_FLAGS ${CMAKE_CXX_FLAGS_DEBUG})
 
@@ -22,26 +14,31 @@ if ( HIP_ENABLE AND HIP_FOUND )
                 list(APPEND HIP_HIPCC_FLAGS -O0)
         endif()
 
-        set(CMAKE_CXX_COMPILER ${HIP_HIPCC_EXECUTABLE})
+#        set(CMAKE_CXX_COMPILER ${HIP_HIPCC_EXECUTABLE})
 
 	list(APPEND HIP_HIPCC_FLAGS -D__NVCC__ -D__HIP__  -DCUDART_VERSION=11000 -D__CUDACC__ -D__CUDACC_VER_MAJOR__=11 -D__CUDACC_VER_MINOR__=0 -D__CUDACC_VER_BUILD__=0)
 
         set_source_files_properties(${CUDA_SOURCES} PROPERTIES LANGUAGE CXX)
 
         hip_add_executable(io main.cpp
-                                  MetaParser/MetaParser_unit_test.cpp
-				  ${CUDA_SOURCES}
-                                  ObjReader/ObjReader_unit_test.cpp)
+		        MetaParser/MetaParser_unit_test.cpp
+				${CUDA_SOURCES}
+                ObjReader/ObjReader_unit_test.cpp
+		        CSVReader/tests/CSVReader_unit_test.cpp)
 
 
 else()
 
 	add_executable(io main.cpp 
-				  MetaParser/MetaParser_unit_test.cpp 
+				  MetaParser/MetaParser_unit_test.cpp
+                  ${CUDA_SOURCES}
 				  ObjReader/ObjReader_unit_test.cpp
+                  CSVReader/tests/CSVReader_unit_test.cpp
 				  catalyst/test/insitu_catalyst_unit_tests.cpp
 				  OpenPMD_writer/test/OpenPMD_writer_test.cpp
-				  ${CUDA_SOURCES})
+				  )
+
+	set_property(TARGET io PROPERTY CUDA_ARCHITECTURES OFF)
 
 endif()
 
@@ -65,17 +62,15 @@ if (CUDA_FOUND)
 	target_include_directories (io PUBLIC ${MPI_C_INCLUDE_DIRS})
 
    	if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0 )
-        	add_compile_options( "-fabi-version=6" )
-    	endif()
+    	add_compile_options( "-fabi-version=6" )
+    endif()
 
-        if (TEST_COVERAGE)
-                target_compile_options(io PRIVATE $<$<COMPILE_LANGUAGE:CUDA>: -Xcompiler "-fprofile-arcs -ftest-coverage" >)
-        endif()
+    if (TEST_COVERAGE)
+    	target_compile_options(io PRIVATE $<$<COMPILE_LANGUAGE:CUDA>: -Xcompiler "-fprofile-arcs -ftest-coverage" >)
+	endif()
 endif()
 
-target_include_directories (io PUBLIC ${METIS_ROOT}/include)
-target_include_directories (io PUBLIC ${PARMETIS_ROOT}/include)
-target_include_directories (io PUBLIC ${CUDA_INCLUDE_DIRS})
+target_include_directories (io PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 target_include_directories (io PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories (io PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../openfpm_devices/src/)
 target_include_directories (io PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../openfpm_vcluster/src/)
@@ -100,16 +95,15 @@ if (PETSC_FOUND)
 	target_include_directories(io PUBLIC ${PETSC_INCLUDES})
 endif()
 
-target_link_libraries(io PRIVATE -L${METIS_ROOT}/lib metis)
-target_link_libraries(io PRIVATE ${PARMETIS_LIBRARIES})
-target_link_libraries(io PRIVATE ${Boost_LIBRARIES})
-target_link_libraries(io PRIVATE ${HDF5_LIBRARIES})
-target_link_libraries(io PRIVATE ${TINYOBJLOADER_LIBRARIES} )
-target_link_libraries(io PRIVATE vcluster)
-target_link_libraries(io PRIVATE ofpmmemory)
-if (OPENPMD_FOUND)
-    target_link_libraries(io PRIVATE openPMD::openPMD)
+target_link_libraries(io ${Boost_LIBRARIES})
+target_link_libraries(io ${HDF5_LIBRARIES})
+target_link_libraries(io ${TINYOBJLOADER_LIBRARIES} )
+target_link_libraries(io vcluster)
+target_link_libraries(io ofpmmemory)
+if (OPENMP_FOUND)
+	target_link_libraries(io OpenMP::OpenMP_CXX)
 endif()
+
 if (PNG_FOUND)
 	target_link_libraries(io PRIVATE ${PNG_LIBRARIES})
 endif()
@@ -131,29 +125,33 @@ endif()
 # As this is a public compile feature anything that links to particles
 # will also build with -std=c++11
 target_compile_features(io PUBLIC cxx_std_11)
-target_link_libraries(io PUBLIC ${MPI_C_LIBRARIES})
-target_link_libraries(io PUBLIC ${MPI_CXX_LIBRARIES})
+target_link_libraries(io ${MPI_C_LIBRARIES})
+target_link_libraries(io ${MPI_CXX_LIBRARIES})
 if (TEST_COVERAGE)
     target_link_libraries(io -lgcov)
 endif()
 
 install(FILES RawReader/RawReader.hpp 
 	      RawReader/RawReader_unit_tests.hpp 
-	      DESTINATION openfpm_io/include/RawReader 
+	      DESTINATION openfpm_io/include/RawReader
 	      COMPONENT OpenFPM)
 
 install(FILES CSVWriter/csv_multiarray.hpp 
 	      CSVWriter/CSVWriter.hpp 
 	      CSVWriter/is_csv_writable.hpp
-	      DESTINATION openfpm_io/include/CSVWriter/ 
+	      DESTINATION openfpm_io/include/CSVWriter/
 	      COMPONENT OpenFPM)
-      
+
+install(FILES CSVReader/CSVReader.hpp
+		DESTINATION openfpm_io/include/CSVReader/
+		COMPONENT OpenFPM)
+
 install(FILES GraphMLWriter/GraphMLWriter.hpp 
-	DESTINATION openfpm_io/include/GraphMLWriter 
+	DESTINATION openfpm_io/include/GraphMLWriter
 	COMPONENT OpenFPM)
 
 install(FILES util/util.hpp util/GBoxes.hpp
-	DESTINATION openfpm_io/include/util 
+	DESTINATION openfpm_io/include/util
 	COMPONENT OpenFPM)
 
 install(FILES VTKWriter/VTKWriter.hpp 
@@ -166,11 +164,11 @@ install(FILES VTKWriter/VTKWriter.hpp
 	      VTKWriter/VTKWriter_grids_util.hpp 
 	      VTKWriter/VTKWriter_vector_box.hpp 
 	      VTKWriter/is_vtk_writable.hpp
-	DESTINATION openfpm_io/include/VTKWriter/ 
+	DESTINATION openfpm_io/include/VTKWriter/
 	COMPONENT OpenFPM)
 
 install(FILES MetaParser/MetaParser.hpp
-	DESTINATION openfpm_io/include/MetaParser/ 
+	DESTINATION openfpm_io/include/MetaParser/
 	COMPONENT OpenFPM)
 
 install(FILES HDF5_wr/HDF5_wr.hpp
@@ -192,7 +190,7 @@ install(FILES util/PathsAndFiles.hpp
 	COMPONENT OpenFPM)
 
 install(FILES Plot/GoogleChart.hpp Plot/util.hpp
-	DESTINATION openfpm_io/include/Plot 
+	DESTINATION openfpm_io/include/Plot
 	COMPONENT OpenFPM)
 
 

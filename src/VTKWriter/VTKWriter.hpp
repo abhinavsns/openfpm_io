@@ -68,19 +68,19 @@ template <typename T> std::string getTypeNew()
 	else if (std::is_same<T,char>::value)
 		return "Int8";
 	else if (std::is_same<T,unsigned char>::value)
-		return "Uint8";
+		return "UInt8";
 	else if (std::is_same<T,short>::value)
 		return "Int16";
 	else if (std::is_same<T,unsigned short>::value)
-		return "Uint16";
+		return "UInt16";
 	else if (std::is_same<T,int>::value)
 		return "Int32";
 	else if (std::is_same<T,unsigned int>::value)
-		return "Uint32";
+		return "UInt32";
 	else if (std::is_same<T,long int>::value)
 		return "Int64";
 	else if (std::is_same<T,unsigned long int>::value )
-		return "Uint64";
+		return "UInt64";
 	else if (std::is_same<T,bool>::value )
 		return "Int8";
 
