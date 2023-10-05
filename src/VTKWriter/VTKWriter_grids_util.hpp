@@ -12,9 +12,11 @@
 #include "util/util_debug.hpp"
 #include "is_vtk_writable.hpp"
 #include "byteswap_portable.hpp"
+#include "util/mathutil.hpp"
 
 /*! \brief Return the Attributes name from the type
  *
+ * This is the case when the type has no name
  *
  */
 template<typename ele_g, bool has_attributes>

@@ -912,7 +912,6 @@
         </DataArray>
       </Verts>
       <PointData>
-<<<<<<< HEAD
         <DataArray type="Float64" Name="attr0" format="ascii">
 0.8529708579401621
 0.2985329875729359

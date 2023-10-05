@@ -91,6 +91,7 @@ private:
         openPMD::Datatype datatype = openPMD::determineDatatype<typename part_type::stype>();
         openPMD::Dataset dataset = openPMD::Dataset(datatype, global_extent);
         auto p = ppmd["position"];
+		auto po = ppmd["positionOffset"];
 
         for (int s = 0 ; s < part_type::dims ; s++)
         {
@@ -106,9 +107,12 @@ private:
             {comp = std::to_string(s);}
 
             typename part_type::stype * local_data = new typename part_type::stype[part.size_local()];
+			typename part_type::stype * local_data_o = new typename part_type::stype[part.size_local()];
 
 		    auto pc = p[comp.c_str()];
+			auto pco = po[comp.c_str()];
             pc.resetDataset(dataset);
+			pco.resetDataset(dataset);
 
             // Fill the data
             size_t pi = 0;
@@ -120,12 +124,14 @@ private:
                 auto key = it.get();
 
                 local_data[pi] = part.template getPos(key)[s];
+				local_data_o[pi] = 0.0;
 
                 ++pi;
                 ++it;
             }
 
             pc.storeChunk(std::shared_ptr< typename part_type::stype >(local_data),{0}, global_extent);
+			pco.storeChunk(std::shared_ptr< typename part_type::stype >(local_data_o),{0}, global_extent);
         }
 	}
 

@@ -4,7 +4,7 @@
  *  Created on: May 16, 2021
  *      Author: Pietro Incardona
  */
-
+#include "config.h"
 #ifdef HAVE_OPENPMD
 
 #define BOOST_TEST_DYN_LINK

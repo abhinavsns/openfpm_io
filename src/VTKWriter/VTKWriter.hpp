@@ -137,7 +137,8 @@ constexpr int VECTOR_GRIDS = 3;
 constexpr int VECTOR_ST_GRIDS = 4;
 constexpr int DIST_GRAPH = 5;
 constexpr int VECTOR_POINTS = 6;
-constexpr int VECTOR_GRIDS_IMAGE = 7;
+constexpr int VECTOR_GRIDS_UMESH = 7;
+constexpr int AMR_GRID_UMESH = 8;
 #define VTK_WRITER 0x10000
 #define FORMAT_ASCII 0x0
 #define FORMAT_BINARY 0x10000000
@@ -153,7 +154,7 @@ class VTKWriter
 #include "VTKWriter_vector_box.hpp"
 #include "VTKWriter_grids.hpp"
 #include "VTKWriter_grids_st.hpp"
-#include "VTKWriter_image.hpp"
+#include "VTKWriter_grid_cells.hpp"
 
 // This is only active if MPI compiler work
 
@@ -162,5 +163,6 @@ class VTKWriter
 #endif
 
 #include "VTKWriter_point_set.hpp"
+#include "VTKWriter_grid_amr_cells.hpp"
 
 #endif /* VTKWRITER_HPP_ */
