@@ -13,19 +13,19 @@ if [ -d "$1/OPENPMD" -a -f "$1/OPENPMD/include/openPMD/openPMD.hpp" ]; then
   exit 0
 fi
 
-wget http://ppmcore.mpi-cbg.de/upload/openPMD-api-0.13.4.tar.gz
-tar -xf openPMD-api-0.13.4.tar.gz
-cd openPMD-api-0.13.4
+wget https://github.com/openPMD/openPMD-api/archive/refs/tags/0.15.2.tar.gz -O openPMD-api-0.15.2.tar.gz
+tar -xf openPMD-api-0.15.2.tar.gz
+cd openPMD-api-0.15.2
 
 mkdir build
 cd build
 
-cmake ../. -DopenPMD_USE_MPI=ON -DopenPMD_USE_ADIOS2=ON -DHDF5_DIR=$1/HDF5 -DHDF5_ROOT=$1/HDF5  -DopenPMD_USE_HDF5=ON -DCMAKE_PREFIX_PATH="$1/ADIOS2/lib64/cmake/adios2/;$1/OPENPMD/lib64/cmake/openPMD/" -DCMAKE_INSTALL_PREFIX=$1/OPENPMD
+cmake ../. -DopenPMD_USE_MPI=ON -DopenPMD_USE_ADIOS2=ON -DHDF5_DIR=$1/HDF5 -DHDF5_ROOT=$1/HDF5  -DopenPMD_USE_HDF5=ON -DCMAKE_PREFIX_PATH="$1/ADIOS2;$1/OPENPMD/lib64/cmake/openPMD/" -DCMAKE_INSTALL_PREFIX=$1/OPENPMD
 
 make -j $2
 make install
-rm openPMD-api-0.13.4.tar.gz
-rm -rf openPMD-api-0.13.4
+rm openPMD-api-0.15.2.tar.gz
+rm -rf openPMD-api-0.15.2
 if [ $? -ne 0 ]; then
     echo "openPMD error installing"
     exit 0

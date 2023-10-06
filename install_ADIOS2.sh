@@ -11,19 +11,21 @@ if [ -d "$1/ADIOS2" -a -f "$1/ADIOS2/include/adios2.h" ]; then
   exit 0
 fi
 
-
-wget http://ppmcore.mpi-cbg.de/upload/ADIOS2-2.7.1.tar.gz
-tar -xf ADIOS2-2.7.1.tar.gz
-cd ADIOS2-2.7.1
+rm -rf ADIOS2-2.9.1
+rm ADIOS2-2.9.1.tar.gz
+wget -O ADIOS2-2.9.1.tar.gz https://github.com/ornladios/ADIOS2/archive/refs/tags/v2.9.1.tar.gz
+tar -xf ADIOS2-2.9.1.tar.gz
+cd ADIOS2-2.9.1
 
 mkdir build
 cd build
-cmake ../. -DADIOS2_USE_MPI=ON -DADIOS2_USE_Fortran=OFF  -DCMAKE_INSTALL_PREFIX=$1/ADIOS2
+cmake ../. -DADIOS2_USE_MPI=ON -DADIOS2_USE_Fortran=OFF  -DCMAKE_INSTALL_PREFIX=$1/ADIOS2 #MACOSSONOMA -DCMAKE_DISABLE_FIND_PACKAGE_LibFFI=TRUE  -DCMAKE_DISABLE_FIND_PACKAGE_BISON=TRUE -DCMAKE_DISABLE_FIND_PACKAGE_CrayDRC=TRUE -DCMAKE_DISABLE_FIND_PACKAGE_FLEX=TRUE -DCMAKE_DISABLE_FIND_PACKAGE_LibFFI=TRUE -DCMAKE_DISABLE_FIND_PACKAGE_NVSTREAM=TRUE
 make -j $2
 
 make install
-rm ADIOS2-2.7.1.tar.gz
-rm -rf ADIOS2-2.7.1
+cd ../..
+rm ADIOS2-2.9.1.tar.gz
+rm -rf ADIOS2-2.9.1
 if [ $? -ne 0 ]; then
     echo "ADIOS2 error installing"
     exit 0
