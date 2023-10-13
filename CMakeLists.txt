@@ -29,8 +29,8 @@ if (CUDA_ON_BACKEND STREQUAL "CUDA")
         enable_language(CUDA)
 endif()
 
-set (CMAKE_CXX_STANDARD 14)
-set (CMAKE_CUDA_STANDARD 14)
+set (CMAKE_CXX_STANDARD 17)
+set (CMAKE_CUDA_STANDARD 17)
 
 if(NOT TINYOBJLOADER_FOUND)
 	set(TINYOBJLOADER_ROOT CACHE PATH "TinyObjLoader library path")
@@ -56,8 +56,9 @@ find_package(LibHilbert)
 find_package(openPMD)
 find_package(ADIOS2)
 find_package(catalyst)
-
+#message(STATUS "trying to find OpenPMD")
 if(openPMD_FOUND)
+	message(STATUS "OpenPMD found IO with FIND_PACKAGE")
 	set(DEFINE_OPENPMD "#define HAVE_OPENPMD")
 endif()
 
@@ -119,10 +120,6 @@ if(PETSC_FOUND)
         set(DEFINE_HAVE_PETSC "#define HAVE_PETSC")
 endif()
 
-if(catalyst_FOUND)
-        set(DEFINE_HAVE_CATALYST "#define HAVE_CATALYST")
-endif()
-
 if(HDF5_FOUND)
 	if (HDF5_IS_PARALLEL)
 		set(DEFINE_HAVE_HDF5 "#define HAVE_HDF5")
@@ -136,7 +133,7 @@ endif()
 if(TINYOBJLOADER_FOUND)
         set(DEFINE_HAVE_TINYOBJLOADER "#define HAVE_TINYOBJLOADER 1")
 endif()
-
+message(STATUS "Current source DIR= ${CMAKE_CURRENT_SOURCE_DIR}")
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config/config_cmake.h.in ${CMAKE_CURRENT_SOURCE_DIR}/src/config/config.h)
 
 include_directories(SYSTEM ${MPI_INCLUDE_PATH})

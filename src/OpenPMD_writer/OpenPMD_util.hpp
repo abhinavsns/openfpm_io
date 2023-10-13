@@ -1,17 +1,17 @@
 #ifndef OPENPMD_UTIL_HPP_
 #define OPENPMD_UTIL_HPP_
 
-namespace openPMD
-{
-    namespace traits
-    {
-        template< typename T_Value >
-        struct IsContiguousContainer< openfpm::vector< T_Value > >
-        {
-            static constexpr bool value = true;
-        };
-    }
-}
+//namespace openPMD::auxiliary
+//{
+//    namespace detail
+//    {
+//        template< typename T_Value >
+//        struct IsContiguousContainer_v< openfpm::vector< T_Value > >
+//        {
+//            static constexpr bool value = true;
+//        };
+//    }
+//}
 
 template<typename T, typename grid_type, typename mesh_type, typename mesh_component_type>
 void set_mesh(grid_type & g, mesh_type & m, mesh_component_type & mc, openPMD::Dataset & dataset)
@@ -166,7 +166,7 @@ struct meta_prop_ppmd
         else
         {prop_str = prop_names.get(I::value);}
 
-        std::vector<size_t> global_extent({part.size_local()});
+        std::vector<long long unsigned int> global_extent({part.size_local()});
         openPMD::Datatype datatype = openPMD::determineDatatype<T>();
         std::string scalar = openPMD::RecordComponent::SCALAR;
         openPMD::Dataset dataset = openPMD::Dataset(datatype, global_extent);
@@ -320,7 +320,7 @@ struct meta_prop_ppmd<I,part_type,T[N1],is_writable>
         else
         {prop_str = prop_names.get(I::value);}
 
-        std::vector<size_t> global_extent({part.size_local()});
+        std::vector<long long unsigned int> global_extent({part.size_local()});
         openPMD::Datatype datatype = openPMD::determineDatatype<T>();
         openPMD::Dataset dataset = openPMD::Dataset(datatype, global_extent);
         auto p = ppmd[prop_str.c_str()];

@@ -493,13 +493,13 @@ do
       conf_options="$conf_options -DHDF5_ROOT=$ac_optarg"
       ;;
       openpmd)
-      cmake_prefix_path="$cmake_prefix_path;$ac_optarg/lib64/cmake/openPMD"
+      conf_options="$conf_options -DOPENPMD_ROOT=$ac_optarg"
       ;;
       adios2)
-      cmake_prefix_path="$cmake_prefix_path;$ac_optarg/lib64/cmake/adios2"
+      conf_options="$conf_options -DADIOS2_ROOT=$ac_optarg"
       ;;
       catalyst)
-      cmake_prefix_path="$cmake_prefix_path;$ac_optarg/lib/cmake/catalyst-2.0/"
+      conf_options="$conf_options -Dcatalyst_DIR=$ac_optarg/lib/cmake/catalyst-2.0/"
       ;;
       petsc)
       conf_options="$conf_options -DPETSC_ROOT=$ac_optarg"

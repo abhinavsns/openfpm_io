@@ -110,7 +110,7 @@ public:
             double time = 0)
     {
         // If ghost smaller than one print a warning
-        auto ghost = grid.getGhost();
+        auto ghost = grid.getDecomposition().getGhost();
 
         for (int i = 0 ; i < grid_type::dims ; i++)
         {

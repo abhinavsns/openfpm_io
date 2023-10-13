@@ -87,7 +87,7 @@ private:
 	template<typename part_pmd_type>
 	void particlePos(part_type & part, part_pmd_type & ppmd)
 	{
-        std::vector<size_t> global_extent({part.size_local()});
+        std::vector<long long unsigned int> global_extent({part.size_local()});
         openPMD::Datatype datatype = openPMD::determineDatatype<typename part_type::stype>();
         openPMD::Dataset dataset = openPMD::Dataset(datatype, global_extent);
         auto p = ppmd["position"];

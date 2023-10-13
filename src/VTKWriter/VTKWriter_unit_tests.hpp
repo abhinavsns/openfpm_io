@@ -1717,7 +1717,7 @@ void process_level(AMR_grid_type & sg_dist, IT_type & dom, int i)
 			sg_dist.template insert<2>(k)[2][1] = -2.0*(z-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
 			sg_dist.template insert<2>(k)[2][2] = -2.0*(z-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
 
-			k = k.move(0,1);
+			k = k.moveSpace(0,1);
 			pos = sg_dist.getPos(k);
 			x = pos.get(0);
 			y = pos.get(1);
@@ -1736,7 +1736,7 @@ void process_level(AMR_grid_type & sg_dist, IT_type & dom, int i)
 			sg_dist.template insert<2>(k)[2][1] = -2.0*(z-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
 			sg_dist.template insert<2>(k)[2][2] = -2.0*(z-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
 
-			k = k.move(1,1);
+			k = k.moveSpace(1,1);
 			pos = sg_dist.getPos(k);
 			x = pos.get(0);
 			y = pos.get(1);
@@ -1755,7 +1755,7 @@ void process_level(AMR_grid_type & sg_dist, IT_type & dom, int i)
 			sg_dist.template insert<2>(k)[2][1] = -2.0*(z-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
 			sg_dist.template insert<2>(k)[2][2] = -2.0*(z-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
 
-			k = k.move(0,-1);
+			k = k.moveSpace(0,-1);
 			pos = sg_dist.getPos(k);
 			x = pos.get(0);
 			y = pos.get(1);
@@ -1774,7 +1774,7 @@ void process_level(AMR_grid_type & sg_dist, IT_type & dom, int i)
 			sg_dist.template insert<2>(k)[2][1] = -2.0*(z-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
 			sg_dist.template insert<2>(k)[2][2] = -2.0*(z-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
 
-			k = k.move(2,1);
+			k = k.moveSpace(2,1);
 			pos = sg_dist.getPos(k);
 			x = pos.get(0);
 			y = pos.get(1);
@@ -1793,7 +1793,7 @@ void process_level(AMR_grid_type & sg_dist, IT_type & dom, int i)
 			sg_dist.template insert<2>(k)[2][1] = -2.0*(z-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
 			sg_dist.template insert<2>(k)[2][2] = -2.0*(z-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
 
-			k = k.move(1,-1);
+			k = k.moveSpace(1,-1);
 			pos = sg_dist.getPos(k);
 			x = pos.get(0);
 			y = pos.get(1);
@@ -1812,7 +1812,7 @@ void process_level(AMR_grid_type & sg_dist, IT_type & dom, int i)
 			sg_dist.template insert<2>(k)[2][1] = -2.0*(z-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
 			sg_dist.template insert<2>(k)[2][2] = -2.0*(z-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
 
-			k = k.move(0,1);
+			k = k.moveSpace(0,1);
 			pos = sg_dist.getPos(k);
 			x = pos.get(0);
 			y = pos.get(1);
@@ -1831,7 +1831,7 @@ void process_level(AMR_grid_type & sg_dist, IT_type & dom, int i)
 			sg_dist.template insert<2>(k)[2][1] = -2.0*(z-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
 			sg_dist.template insert<2>(k)[2][2] = -2.0*(z-0.5)*(z-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) / 0.1 );
 		
-			k = k.move(1,1);
+			k = k.moveSpace(1,1);
 			pos = sg_dist.getPos(k);
 			x = pos.get(0);
 			y = pos.get(1);
@@ -1863,7 +1863,7 @@ void process_level(AMR_grid_type & sg_dist, IT_type & dom, int i)
 				{
 					for(int kk = 0 ; kk < 3 ; kk++)
 					{
-						auto km = k.move(0,ii).move(1,jj).move(2,kk);
+						auto km = k.moveSpace(0,ii).moveSpace(1,jj).moveSpace(2,kk);
 
 						auto pos = sg_dist.getPos(km);
 
@@ -1937,7 +1937,7 @@ void process_level2D(AMR_grid_type & sg_dist, IT_type & dom, int i)
 			sg_dist.template insert<2>(k)[1][0] = -2.0*(y-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
 			sg_dist.template insert<2>(k)[1][1] = -2.0*(y-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
 
-			k = k.move(0,1);
+			k = k.moveSpace(0,1);
 			pos = sg_dist.getPos(k);
 			x = pos.get(0);
 			y = pos.get(1);
@@ -1949,7 +1949,7 @@ void process_level2D(AMR_grid_type & sg_dist, IT_type & dom, int i)
 			sg_dist.template insert<2>(k)[1][0] = -2.0*(y-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
 			sg_dist.template insert<2>(k)[1][1] = -2.0*(y-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
 
-			k = k.move(1,1);
+			k = k.moveSpace(1,1);
 			pos = sg_dist.getPos(k);
 			x = pos.get(0);
 			y = pos.get(1);
@@ -1961,7 +1961,7 @@ void process_level2D(AMR_grid_type & sg_dist, IT_type & dom, int i)
 			sg_dist.template insert<2>(k)[1][0] = -2.0*(y-0.5)*(x-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
 			sg_dist.template insert<2>(k)[1][1] = -2.0*(y-0.5)*(y-0.5)*exp(-((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) ) / 0.1 );
 
-			k = k.move(0,-1);
+			k = k.moveSpace(0,-1);
 			pos = sg_dist.getPos(k);
 			x = pos.get(0);
 			y = pos.get(1);
@@ -1984,7 +1984,7 @@ void process_level2D(AMR_grid_type & sg_dist, IT_type & dom, int i)
 			{
 				for (int jj = 0 ; jj < 3 ; jj++)
 				{
-					auto km = k.move(0,ii).move(1,jj);
+					auto km = k.moveSpace(0,ii).moveSpace(1,jj);
 
 					auto pos = sg_dist.getPos(km);
 
