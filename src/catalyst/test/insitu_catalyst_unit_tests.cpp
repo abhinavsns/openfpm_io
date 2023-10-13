@@ -138,8 +138,8 @@ BOOST_AUTO_TEST_CASE( catalyst_dist_test_use)
                                           {"test_data/catalyst_pipeline_volume_scalar.py"},
                                           {"test_data/catalyst_pipeline_arrow.py"},
                                           {"test_data/catalyst_pipeline_isosurface.py"},
-                                          {"test_data/catalyst_pipeline_streamline.py"}/*,
-                                          {"test_data/catalyst_pipeline_save_file.py"}*/});
+                                          {"test_data/catalyst_pipeline_streamline.py"},
+                                          {"test_data/catalyst_pipeline_save_file.py"}});
 
     isv.initialize(scripts);
 
