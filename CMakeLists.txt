@@ -54,7 +54,9 @@ find_package(Vc)
 find_package(PNG)
 find_package(HIP)
 find_package(LibHilbert)
-find_package(openPMD)
+if (NOT openPMD_FOUND)
+	find_package(openPMD)
+endif()
 find_package(ADIOS2)
 find_package(catalyst)
 
@@ -157,6 +159,7 @@ add_subdirectory (../openfpm_vcluster openfpm_vcluster)
 
 set(WARNING_SUPPRESSION_AND_OPTION_NVCC ${WARNING_SUPPRESSION_AND_OPTION_NVCC} PARENT_SCOPE)
 set(WARNING_SUPPRESSION_AND_OPTION_NVCC_TEXT ${WARNING_SUPPRESSION_AND_OPTION_NVCC_TEXT} PARENT_SCOPE)
+
 
 add_subdirectory (src)
 

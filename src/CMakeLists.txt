@@ -161,6 +161,8 @@ install(FILES VTKWriter/VTKWriter.hpp
 	      VTKWriter/VTKWriter_grids_st.hpp 
 	      VTKWriter/VTKWriter_grids_util.hpp 
 	      VTKWriter/VTKWriter_vector_box.hpp 
+	      VTKWriter/VTKWriter_grid_cells.hpp
+	      VTKWriter/VTKWriter_grid_amr_cells.hpp
 	      VTKWriter/is_vtk_writable.hpp
 	DESTINATION openfpm_io/include/VTKWriter/ 
 	COMPONENT OpenFPM)
@@ -178,6 +180,13 @@ install(FILES HDF5_wr/HDF5_wr.hpp
 	HDF5_wr/HDF5_reader_vd.hpp
 	DESTINATION openfpm_io/include/HDF5_wr
 	COMPONENT OpenFPM)
+
+install(FILES OpenPMD_writer/OpenPMD_grids.hpp
+        OpenPMD_writer/OpenPMD_parts.hpp
+        OpenPMD_writer/OpenPMD_util.hpp
+        OpenPMD_writer/OpenPMD_writer.hpp
+	DESTINATION openfpm_io/include/OpenPMD_writer
+        COMPONENT OpenFPM)
 
 install(FILES RawReader/InitGridWithPixel.hpp
 	DESTINATION openfpm_io/include/RawReader/

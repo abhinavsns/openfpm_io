@@ -31,7 +31,7 @@ struct prop_out_pmd
 
 	openpmd_type & mesh_grid;
 
-	grid_type & grid;
+	const grid_type & grid;
 
 	series_type & series;
 
@@ -42,7 +42,7 @@ struct prop_out_pmd
 	 * \param ft ASCII or BINARY format
 	 *
 	 */
-	prop_out_pmd(series_type & series, openpmd_type & mesh_grid, grid_type & grid, const openfpm::vector<std::string> & prop_names)
+	prop_out_pmd(series_type & series, openpmd_type & mesh_grid, const grid_type & grid, const openfpm::vector<std::string> & prop_names)
 	:mesh_grid(mesh_grid),grid(grid),prop_names(prop_names),series(series)
 	{};
 
@@ -106,7 +106,7 @@ public:
 	 * \return true if the function write successfully
 	 *
 	 */
-	bool write(grid_type & grid, std::string file)
+	bool write(const grid_type & grid, std::string file)
 	{
 		// open file for writing
 		openPMD::Series series = openPMD::Series(

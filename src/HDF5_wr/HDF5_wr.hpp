@@ -12,6 +12,9 @@
 constexpr int VECTOR_DIST_HDF5_WR = 1;
 constexpr int GRID_DIST_HDF5_WR = 2;
 
+
+constexpr int FORMAT_OPENFPM_HDF5 = 0;
+
 #include "HDF5_writer.hpp"
 #include "HDF5_reader.hpp"
 

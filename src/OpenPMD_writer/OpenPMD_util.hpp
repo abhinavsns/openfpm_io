@@ -72,7 +72,7 @@ struct meta_prop_pmd
 	 *
 	 */
     template<typename openpmd_type>
-	inline meta_prop_pmd(openpmd_type & grid, grid_type & g, const openfpm::vector<std::string> & prop_names)
+	inline meta_prop_pmd(openpmd_type & grid, const grid_type & g, const openfpm::vector<std::string> & prop_names)
 	{
         std::string prop_str;
 
@@ -157,7 +157,7 @@ struct meta_prop_ppmd
 	 *
 	 */
     template<typename openpmd_type>
-	inline meta_prop_ppmd(openpmd_type & ppmd, part_type & part, const openfpm::vector<std::string> & prop_names)
+	inline meta_prop_ppmd(openpmd_type & ppmd, const part_type & part, const openfpm::vector<std::string> & prop_names)
 	{
         std::string prop_str;
 
@@ -208,7 +208,7 @@ struct meta_prop_pmd<I, grid_type,T[N1],is_writable>
 	 *
 	 */
     template<typename openpmd_type>
-	inline meta_prop_pmd(openpmd_type & grid, grid_type & g, const openfpm::vector<std::string> & prop_names)
+	inline meta_prop_pmd(openpmd_type & grid, const grid_type & g, const openfpm::vector<std::string> & prop_names)
 	{
         std::string prop_str;
 
@@ -311,7 +311,7 @@ struct meta_prop_ppmd<I,part_type,T[N1],is_writable>
 	 *
 	 */
     template<typename openpmd_type>
-	inline meta_prop_ppmd(openpmd_type & ppmd, part_type & part, const openfpm::vector<std::string> & prop_names)
+	inline meta_prop_ppmd(openpmd_type & ppmd, const part_type & part, const openfpm::vector<std::string> & prop_names)
 	{
         std::string prop_str;
 
@@ -376,7 +376,7 @@ struct meta_prop_pmd<I, grid_type, T[N1][N2],is_writable>
 	 * \param ft ASCII or BINARY
 	 *
 	 */
-	inline meta_prop_pmd(openPMD::Mesh & grid, grid_type & g, const openfpm::vector<std::string> & prop_names)
+	inline meta_prop_pmd(openPMD::Mesh & grid, const grid_type & g, const openfpm::vector<std::string> & prop_names)
 	{
 
 	}
@@ -403,7 +403,7 @@ struct meta_prop_ppmd<I,part_type,T[N1][N2],is_writable>
 	 *
 	 */
     template<typename openpmd_type>
-	inline meta_prop_ppmd(openpmd_type & ppmd, part_type & part, const openfpm::vector<std::string> & prop_names)
+	inline meta_prop_ppmd(openpmd_type & ppmd, const part_type & part, const openfpm::vector<std::string> & prop_names)
 	{
     }
 };

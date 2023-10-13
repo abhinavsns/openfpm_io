@@ -31,7 +31,7 @@ struct prop_out_ppmd
 
 	openpmd_type & part_pmd;
 
-	part_type & part;
+	const part_type & part;
 
 	series_type & series;
 
@@ -42,7 +42,7 @@ struct prop_out_ppmd
 	 * \param ft ASCII or BINARY format
 	 *
 	 */
-	prop_out_ppmd(series_type & series, openpmd_type & part_pmd, part_type & part, const openfpm::vector<std::string> & prop_names)
+	prop_out_ppmd(series_type & series, openpmd_type & part_pmd, const part_type & part, const openfpm::vector<std::string> & prop_names)
 	:part_pmd(part_pmd),part(part),prop_names(prop_names),series(series)
 	{};
 
@@ -85,7 +85,7 @@ class OpenPMD_Writer<part_type,OPENPMD_PART_DIST>
 private:
 
 	template<typename part_pmd_type>
-	void particlePos(part_type & part, part_pmd_type & ppmd)
+	void particlePos(const part_type & part, part_pmd_type & ppmd)
 	{
         std::vector<size_t> global_extent({part.size_local()});
         openPMD::Datatype datatype = openPMD::determineDatatype<typename part_type::stype>();
@@ -157,7 +157,7 @@ public:
 	 * \return true if the function write successfully
 	 *
 	 */
-	bool write(part_type & part, std::string file)
+	bool write(const part_type & part, std::string file)
 	{
 		// open file for writing
 		openPMD::Series series = openPMD::Series(

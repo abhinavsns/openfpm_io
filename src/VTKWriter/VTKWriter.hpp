@@ -139,10 +139,11 @@ constexpr int DIST_GRAPH = 5;
 constexpr int VECTOR_POINTS = 6;
 constexpr int VECTOR_GRIDS_UMESH = 7;
 constexpr int AMR_GRID_UMESH = 8;
-#define VTK_WRITER 0x10000
-#define FORMAT_ASCII 0x0
-#define FORMAT_BINARY 0x10000000
-#define PRINT_GHOST 1
+constexpr int VTK_WRITER = 0x10000;
+constexpr int VTK_WRITER_POLYDATA = 0x20000;
+constexpr int FORMAT_ASCII = 0x0;
+constexpr int FORMAT_BINARY = 0x10000000;
+constexpr int DATA_WITH_GHOST = 1;
 
 template <typename Object, unsigned int imp>
 class VTKWriter
