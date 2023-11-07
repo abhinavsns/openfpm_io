@@ -133,8 +133,8 @@ endif()
 # As this is a public compile feature anything that links to particles
 # will also build with -std=c++11
 target_compile_features(io PUBLIC cxx_std_11)
-target_link_libraries(io ${MPI_C_LIBRARIES})
-target_link_libraries(io ${MPI_CXX_LIBRARIES})
+target_link_libraries(io PUBLIC ${MPI_C_LIBRARIES})
+target_link_libraries(io PUBLIC ${MPI_CXX_LIBRARIES})
 if (TEST_COVERAGE)
     target_link_libraries(io -lgcov)
 endif()
@@ -169,8 +169,10 @@ install(FILES VTKWriter/VTKWriter.hpp
 	      VTKWriter/VTKWriter_point_set.hpp  
 	      VTKWriter/VTKWriter_grids.hpp 
 	      VTKWriter/VTKWriter_grids_st.hpp 
-	      VTKWriter/VTKWriter_grids_util.hpp 
-	      VTKWriter/VTKWriter_vector_box.hpp 
+	      VTKWriter/VTKWriter_grids_util.hpp
+		  VTKWriter/VTKWriter_grid_cells.hpp
+		  VTKWriter/VTKWriter_grid_amr_cells.hpp
+	      VTKWriter/VTKWriter_vector_box.hpp
 	      VTKWriter/is_vtk_writable.hpp
 	DESTINATION openfpm_io/include/VTKWriter/
 	COMPONENT OpenFPM)
