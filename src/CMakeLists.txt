@@ -34,7 +34,7 @@ else()
                   ${CUDA_SOURCES}
 				  ObjReader/ObjReader_unit_test.cpp
                   CSVReader/tests/CSVReader_unit_test.cpp
-				  catalyst/test/insitu_catalyst_unit_tests.cpp
+				  catalyst/test/catalyst_adaptor_unit_tests.cpp
 				  OpenPMD_writer/test/OpenPMD_writer_test.cpp
 				  )
 

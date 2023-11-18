@@ -20,6 +20,7 @@ cmake ../. -DCMAKE_INSTALL_PREFIX=$1/CATALYST
 make -j $2
 
 make install
+cd ../..
 rm -rf catalyst
 if [ $? -ne 0 ]; then
     echo "CATALYST error installing"
