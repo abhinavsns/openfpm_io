@@ -12,8 +12,6 @@
 #include "config.h"
 #include <catalyst.hpp>
 
-#if defined(HAVE_CATALYST)
-
 BOOST_AUTO_TEST_SUITE(catalyst_test_suite)
 
 // Test utilities to compare Catalyst-produced image with ground truth.
@@ -66,17 +64,18 @@ void check_png(const std::string &img1_path, const std::string &img2_path)
 BOOST_AUTO_TEST_CASE(catalyst_grid_dist_test)
 {
     Vcluster<> &v_cl = create_vcluster();
+    size_t sz[3] = {40, 40, 40};
     size_t bc[3] = {NON_PERIODIC, NON_PERIODIC, NON_PERIODIC};
-    Box<3, double> domain({-0.3, -0.3, -0.3}, {1.0, 1.0, 1.0});
+    Box<3, double> domain({0, 0, 0}, {2.0, 2.0, 2.0});
     Ghost<3, long int> g(1);
-    size_t sz[3] = {20, 20, 20};
-    grid_dist_id<3, double, aggregate<double, double[3]>> grid(sz, domain, g);
+    grid_dist_id<3, double, aggregate<double, VectorS<3, double>, double[3][3]>> grid(sz, domain, g);
 
-    openfpm::vector<std::string> prop_names({{"scalar"}, {"vector"}});
+    openfpm::vector<std::string> prop_names({"scalar", "vector", "tensor"});
     enum
     {
         SCALAR,
-        VECTOR
+        VECTOR,
+        TENSOR
     };
     grid.setPropNames(prop_names);
 
@@ -84,53 +83,70 @@ BOOST_AUTO_TEST_CASE(catalyst_grid_dist_test)
     while (it.isNext())
     {
         auto key = it.get();
-        auto k = it.getGKey(key);
+        auto pos = it.getGKey(key);
 
-        grid.template get<0>(key) = k.get(0) + k.get(1) + k.get(2);
-        grid.template get<1>(key)[0] = k.get(0) * 0.01;
-        grid.template get<1>(key)[1] = k.get(1) * 0.01;
-        grid.template get<1>(key)[2] = k.get(2) * 0.01;
+        double x = pos.get(0) * grid.getSpacing()[0];
+        double y = pos.get(1) * grid.getSpacing()[1];
+        double z = pos.get(2) * grid.getSpacing()[2];
+
+        grid.get<SCALAR>(key) = x + y + z;
+        
+        grid.get<VECTOR>(key)[0] = sin(x + y);
+        grid.get<VECTOR>(key)[1] = cos(x + y);
+        grid.get<VECTOR>(key)[2] = 0.0;
+
+        grid.get<TENSOR>(key)[0][0] = x*x;
+        grid.get<TENSOR>(key)[0][1] = x*y;
+        grid.get<TENSOR>(key)[0][2] = x*z;
+
+        grid.get<TENSOR>(key)[1][0] = y*x;
+        grid.get<TENSOR>(key)[1][1] = y*y;
+        grid.get<TENSOR>(key)[1][2] = y*z;
+
+        grid.get<TENSOR>(key)[2][0] = z*x;
+        grid.get<TENSOR>(key)[2][1] = z*y;
+        grid.get<TENSOR>(key)[2][2] = z*z;
+
 
         ++it;
     }
 
     grid.map();
-    grid.ghost_get<SCALAR, VECTOR>();
-    // FIXME Cannot open vtk file in ParaView
+    grid.ghost_get<SCALAR, VECTOR, TENSOR>();
     // Generate representative dataset to create visualization pipeline in ParaView
     //grid.write("grid_dist_test_data");
 
     // Visualization with Catalyst Adaptor
     // Images written to ./datasets/ folder
-    catalyst_adaptor<decltype(grid), vis_props<SCALAR, VECTOR>, catalyst_adaptor_impl::GRID_DIST> adaptor;
-    openfpm::vector<std::string> scripts({{"test_data/catalyst_grid_dist_test_pipeline.py"}});
+    catalyst_adaptor<decltype(grid), vis_props<SCALAR, VECTOR, TENSOR>, catalyst_adaptor_impl::GRID_DIST> adaptor;
+    openfpm::vector<std::string> scripts({{"test_data/catalyst_grid_dist_pipeline.py"}});
     adaptor.initialize(scripts);
     adaptor.execute(grid);
     adaptor.finalize();
 
 #ifdef HAVE_PNG
-    check_png("catalyst_grid_dist.png", "test_data/catalyst_grid_dist_ground_truth.png");
+    check_png("datasets/catalyst_grid_dist.png", "test_data/catalyst_grid_dist_ground_truth.png");
 #endif
 }
 
 BOOST_AUTO_TEST_CASE(catalyst_vector_dist_test)
 {
     Vcluster<> &v_cl = create_vcluster();
+    size_t sz[3] = {40, 40, 40};
     size_t bc[3] = {NON_PERIODIC, NON_PERIODIC, NON_PERIODIC};
-    Box<3, double> domain({-0.3, -0.3, -0.3}, {1.0, 1.0, 1.0});
-    Ghost<3, double> g(1);
-    size_t sz[3] = {20, 20, 20};
-    vector_dist_ws<3, double, aggregate<double, double[3]>> particles(0, domain, bc, g);
-
-    openfpm::vector<std::string> prop_names({{"scalar"}, {"vector"}});
+    Box<3, double> domain({0, 0, 0}, {2.0, 2.0, 2.0});
+    Ghost<3, double> g(3. * 2. / (sz[0] - 1));
+    vector_dist_ws<3, double, aggregate<double, VectorS<3, double>, double[3][3]>> particles(0, domain, bc, g);
+    openfpm::vector<std::string> prop_names({"scalar", "vector", "tensor"});
     enum
     {
         SCALAR,
-        VECTOR
+        VECTOR,
+        TENSOR
     };
     particles.setPropNames(prop_names);
 
-    // Assign scalar = x + y + z, vector = {sin(x + y), cos(x + y), 0} properties to the particles
+    // Assign scalar = x + y + z, vector = {sin(x + y), cos(x + y), 0}, tensor = {{x^2, xy}, {-xy, y^2}} properties to the particles
     auto it = particles.getGridIterator(sz);
     while (it.isNext())
     {
@@ -142,23 +158,30 @@ BOOST_AUTO_TEST_CASE(catalyst_vector_dist_test)
         particles.getLastPos()[1] = y;
         double z = key.get(2) * it.getSpacing(2);
         particles.getLastPos()[2] = z;
-        particles.getLastProp<0>() = x + y + z;
-        particles.getLastProp<1>()[0] = sin(x + y);
-        particles.getLastProp<1>()[1] = cos(x + y);
-        particles.getLastProp<1>()[2] = 0.0;
+
+        particles.getLastProp<SCALAR>() = x + y + z;
+
+        particles.getLastProp<VECTOR>()[0] = sin(x + y);
+        particles.getLastProp<VECTOR>()[1] = cos(x + y);
+        particles.getLastProp<VECTOR>()[2] = 0.0;
+
+        particles.getLastProp<TENSOR>()[0][0] = x*x;
+        particles.getLastProp<TENSOR>()[0][1] = x*y;
+        particles.getLastProp<TENSOR>()[1][0] = -x*y;
+        particles.getLastProp<TENSOR>()[1][1] = y*y;
 
         ++it;
     }
 
     particles.map();
-    particles.ghost_get<SCALAR, VECTOR>();
+    particles.ghost_get<SCALAR, VECTOR, TENSOR>();
     // Generate representative dataset to create visualization pipeline in ParaView
     //particles.write("vector_dist_test_data");
 
     // Visualization with Catalyst Adaptor
     // Images written to ./datasets/ folder
-    catalyst_adaptor<decltype(particles), vis_props<SCALAR, VECTOR>, catalyst_adaptor_impl::VECTOR_DIST> adaptor;
-    openfpm::vector<std::string> scripts({{"test_data/catalyst_vector_dist_test_pipeline.py"}});
+    catalyst_adaptor<decltype(particles), vis_props<SCALAR, VECTOR, TENSOR>, catalyst_adaptor_impl::VECTOR_DIST> adaptor;
+    openfpm::vector<std::string> scripts({{"test_data/catalyst_vector_dist_pipeline.py"}});
     adaptor.initialize(scripts);
     adaptor.execute(particles);
     adaptor.finalize();
@@ -167,6 +190,5 @@ BOOST_AUTO_TEST_CASE(catalyst_vector_dist_test)
     check_png("datasets/catalyst_vector_dist.png", "test_data/catalyst_vector_dist_ground_truth.png");
 #endif
 }
-BOOST_AUTO_TEST_SUITE_END()
 
-#endif
+BOOST_AUTO_TEST_SUITE_END()

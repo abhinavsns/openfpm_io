@@ -203,7 +203,12 @@ install(FILES Plot/GoogleChart.hpp Plot/util.hpp
 	DESTINATION openfpm_io/include/Plot
 	COMPONENT OpenFPM)
 
-
+install(FILES catalyst/catalyst_adaptor.hpp
+	catalyst/catalyst_adaptor_grid_dist.hpp
+	catalyst/catalyst_adaptor_vector_dist.hpp
+	DESTINATION openfpm_io/include/catalyst
+	COMPONENT OpenFPM)
+	
 #if(BUILD_TESTING)
 
 #  add_executable(particle_test test.cu)
